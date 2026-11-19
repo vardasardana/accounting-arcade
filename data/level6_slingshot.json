@@ -1,0 +1,39 @@
+{
+  "industry": "Pharmaceuticals",
+  "ratios": [
+    { "key": "cr", "label": "Current ratio", "unit": "times" },
+    { "key": "de", "label": "Debt-equity ratio", "unit": "" },
+    { "key": "ic", "label": "Interest coverage", "unit": "times" },
+    { "key": "npm", "label": "Net profit margin", "unit": "%" },
+    { "key": "it", "label": "Inventory turnover", "unit": "times" },
+    { "key": "cp", "label": "Collection period", "unit": "days" },
+    { "key": "pe", "label": "P/E ratio", "unit": "times" }
+  ],
+  "rounds": [
+    {
+      "id": "R1",
+      "companies": [
+        { "name": "Medivale Pharma Ltd", "ceo": "Ms Meera Vale", "colour": "#0072B2", "ratios": { "cr": 1.5, "de": 0.5, "ic": 5.0, "npm": 9, "it": 6.0, "cp": 46, "pe": 20 } },
+        { "name": "Curanova Pharma Ltd", "ceo": "Mr Kabir Nova", "colour": "#CC79A7", "ratios": { "cr": 0.7, "de": 0.5, "ic": 5.5, "npm": 16, "it": 2.5, "cp": 44, "pe": 21 } }
+      ],
+      "headlines": [
+        { "id": "L6-H01", "source": "The Daily Ledger", "text": "Suppliers fear this company may struggle to pay the bills falling due in the next few months.", "answer": "Curanova Pharma Ltd", "category": "Liquidity", "ratio": "cr", "explanation": "Liquidity, seen in the current ratio: Curanova's current assets cover its current liabilities only 0.7 times, against Medivale's 1.5 times. Below 1, short-term bills exceed short-term assets." },
+        { "id": "L6-H02", "source": "Business Times", "text": "It keeps far more of every dollar of sales as profit after all its costs and taxes.", "answer": "Curanova Pharma Ltd", "category": "Profitability", "ratio": "npm", "explanation": "Profitability, seen in the net profit margin: Curanova keeps 16% of sales as net profit, Medivale only 9%." },
+        { "id": "L6-H03", "source": "Pharma Trade Weekly", "text": "Its medicines leave the warehouse and are restocked far more often than its rival's.", "answer": "Medivale Pharma Ltd", "category": "Efficiency", "ratio": "it", "explanation": "Efficiency, seen in inventory turnover: Medivale sells and replaces its stock 6 times a year, Curanova only 2.5 times." }
+      ]
+    },
+    {
+      "id": "R2",
+      "companies": [
+        { "name": "Medivale Pharma Ltd", "ceo": "Ms Meera Vale", "colour": "#0072B2", "ratios": { "cr": 1.5, "de": 0.5, "ic": 5.0, "npm": 9, "it": 6.0, "cp": 46, "pe": 20 } },
+        { "name": "Pillbridge Pharma Ltd", "ceo": "Mr Arjun Bridge", "colour": "#E69F00", "ratios": { "cr": 1.6, "de": 2.4, "ic": 1.3, "npm": 8, "it": 6.5, "cp": 95, "pe": 45 } }
+      ],
+      "headlines": [
+        { "id": "L6-H04", "source": "Banking Regulator Bulletin", "text": "Lenders worry whether this company's profits are enough to keep up with its interest bill.", "answer": "Pillbridge Pharma Ltd", "category": "Solvency", "ratio": "ic", "explanation": "Solvency, seen in interest coverage: Pillbridge's operating profit (EBIT) covers its interest only 1.3 times, against Medivale's 5 times." },
+        { "id": "L6-H05", "source": "The Daily Ledger", "text": "It relies far less on borrowed money than its rival does.", "answer": "Medivale Pharma Ltd", "category": "Solvency", "ratio": "de", "explanation": "Solvency, seen in the debt-equity ratio: Medivale has $0.5 of debt for every $1 of shareholders' funds, Pillbridge $2.4." },
+        { "id": "L6-H06", "source": "Hospital Buyers' Forum", "text": "Hospitals take months to pay this company for the medicines they buy.", "answer": "Pillbridge Pharma Ltd", "category": "Efficiency", "ratio": "cp", "explanation": "Efficiency, seen in the collection period: Pillbridge waits 95 days to collect from customers, Medivale 46 days." },
+        { "id": "L6-H07", "source": "Market Watch", "text": "Investors pay far more for each dollar of this company's earnings.", "answer": "Pillbridge Pharma Ltd", "category": "Market value", "ratio": "pe", "explanation": "Market value, seen in the P/E ratio: investors pay 45 times earnings for Pillbridge's shares, 20 times for Medivale's." }
+      ]
+    }
+  ]
+}

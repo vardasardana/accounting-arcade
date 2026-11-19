@@ -30,7 +30,7 @@ export class Level3 extends LevelBase {
   constructor() { super('L3', 3); }
   introLines() {
     return [
-      'Crates ride the belt at <b>Halcyon Home Appliances Inc.</b> Push each one into the right Balance Sheet chute before the red line.',
+      'Crates ride the belt at <b>Pedalcraft Cycles Ltd</b>, a bicycle maker, Push each one into the right Balance Sheet chute before the red line.',
       'Use the arrow keys or <span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span> (shown on each chute sign), click a sign, or swipe on the crate.',
       'From Wave 3, liabilities split into Current and Non-current (<span class="kbd">E</span>). In Wave 5 a trapdoor opens (<span class="kbd">Space</span>) for items that are never recorded.',
       'Sort before the crate passes the glowing square for a speed bonus.',

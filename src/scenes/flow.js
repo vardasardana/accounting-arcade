@@ -28,7 +28,7 @@ function extraTile(res) {
     case 3: return { b: res.fastest ? (res.fastest / 1000).toFixed(1) + 's' : '–', s: 'Fastest correct crate' };
     case 4: { const r = x.receipt || []; const np = r.find((l) => /net profit/i.test(l.label)); return { b: np ? np.amount : r.length + ' lines', s: np ? 'Net profit on your receipt' : 'Income Statement lines built' }; }
     case 5: return { b: `${x.cfo || 0}/${x.cfi || 0}/${x.cff || 0}`, s: `Operating / Investing / Financing hits · ${x.adj || 0} adjustments · ${x.missed || 0} missed` };
-    case 6: { const t = x.themes || {}; const k = Object.keys(t); return { b: k.length ? k.filter((q) => t[q].c === t[q].n).length + '/' + k.length : '–', s: 'Ratio families and verdicts all correct' }; }
+    case 6: { const t = x.themes || {}; const k = Object.keys(t); return { b: k.length ? k.filter((q) => t[q].c === t[q].n).length + '/' + k.length : '–', s: 'Ratio families and headline categories all correct' }; }
     default: return { b: '', s: '' };
   }
 }
@@ -142,7 +142,7 @@ export class ResultsScene extends Phaser.Scene {
       <div style="display:flex;align-items:center;gap:16px">
         <img src="${avatarUri(p.avatar || 0)}" alt="" style="width:80px">
         <div><h1 class="h1" style="margin:0">${esc(p.role)} ${esc(p.name)}, here is your annual report!</h1>
-        <div class="muted">Copperleaf Coffee Ltd · ${esc(run.speed)} speed · <span class="shared-status">${run.mode === 'class' && sharedEnabled() ? 'Saving to the class leaderboard…' : 'Saved on this device'}</span></div></div>
+        <div class="muted">${esc(run.speed)} speed · <span class="shared-status">${run.mode === 'class' && sharedEnabled() ? 'Saving to the class leaderboard…' : 'Saved on this device'}</span></div></div>
         <div class="medal" style="margin-left:auto;background:${mcol}">🏅 ${medal}</div></div>
       <div class="tiles" style="grid-template-columns:repeat(5,1fr);margin-top:12px">
         <div class="tile"><b>${run.total.toLocaleString('en-US')}</b><span>Total Earned</span></div>

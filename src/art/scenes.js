@@ -291,3 +291,33 @@ export function trolley() {
    <path d="M92 262 L100 296 H286" stroke="${O}" stroke-width="7" fill="none" stroke-linejoin="round"/>
    ${[118, 266].map((x) => `<circle cx="${x}" cy="308" r="16" fill="#2A2F36" stroke="${O}" stroke-width="4"/><circle cx="${x}" cy="308" r="6" fill="#C9CED6"/>`).join('')}`);
 }
+
+// ---------- Level 6 stage B: Headline Slingshot ----------
+export const SLING = { x: 230, y: 478, ground: 612 };
+export function bgSling() {
+  return svg(W, H, `
+   <rect width="${W}" height="${H}" fill="url(#sk)"/>
+   ${cloud(80, 250, 1.1)}${cloud(470, 300, 0.9)}${cloud(560, 210, 0.7)}
+   <path d="M0 520 Q200 430 420 500 T860 470 T1280 480 V${SLING.ground} H0 Z" fill="#9ED8A8" stroke="${O}" stroke-width="3"/>
+   <path d="M0 560 Q260 500 560 550 T1280 540 V${SLING.ground} H0 Z" fill="#6CC17A" stroke="${O}" stroke-width="3"/>
+   <rect y="${SLING.ground}" width="${W}" height="${H - SLING.ground}" fill="#8A5A34" stroke="${O}" stroke-width="4"/>
+   <rect y="${SLING.ground}" width="${W}" height="14" fill="#4FA35F" stroke="${O}" stroke-width="3"/>`,
+    `<linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7EC8F0"/><stop offset="1" stop-color="#DFF3FF"/></linearGradient>`);
+}
+export function slingshot() {
+  return svg(120, 170, `<path d="M60 168 V86 M60 90 Q60 60 22 20 M60 90 Q60 60 98 20" stroke="${O}" stroke-width="22" fill="none" stroke-linecap="round"/><path d="M60 168 V86 M60 90 Q60 60 22 20 M60 90 Q60 60 98 20" stroke="#A86B3C" stroke-width="14" fill="none" stroke-linecap="round"/>`);
+}
+export function newspaper() {
+  return svg(64, 44, `<rect x="3" y="6" width="58" height="34" rx="6" fill="#F4F1E8" stroke="${O}" stroke-width="3" transform="rotate(-8 32 22)"/><path d="M12 16 H40 M12 23 H52 M12 30 H46" stroke="${O}" stroke-width="3" transform="rotate(-8 32 22)"/><rect x="42" y="12" width="12" height="9" fill="${C.verm}" transform="rotate(-8 32 22)"/>`);
+}
+export function ceo(col) {
+  return svg(90, 120, `<path d="M18 118 V74 Q18 56 45 56 Q72 56 72 74 V118 Z" fill="${col}" stroke="${O}" stroke-width="3.5"/>
+   <path d="M45 58 L38 70 L45 96 L52 70 Z" fill="#fff" stroke="${O}" stroke-width="2"/><path d="M45 70 L41 76 L45 92 L49 76 Z" fill="${C.verm}"/>
+   <circle cx="45" cy="34" r="22" fill="#E8B48A" stroke="${O}" stroke-width="3.5"/><circle cx="37" cy="33" r="3" fill="${O}"/><circle cx="53" cy="33" r="3" fill="${O}"/><path d="M37 43 Q45 49 53 43" stroke="${O}" stroke-width="3" fill="none" stroke-linecap="round"/>`);
+}
+export function topHat(col) {
+  return svg(70, 50, `<rect x="16" y="4" width="38" height="34" rx="4" fill="#222" stroke="${O}" stroke-width="3"/><rect x="16" y="26" width="38" height="8" fill="${col}"/><rect x="4" y="36" width="62" height="10" rx="5" fill="#222" stroke="${O}" stroke-width="3"/>`);
+}
+export function block(w = 120, h = 42) {
+  return svg(w, h, `<rect x="2" y="2" width="${w - 4}" height="${h - 4}" rx="5" fill="#C98B4E" stroke="${O}" stroke-width="3"/><path d="M10 ${h / 2} H${w - 10}" stroke="#A86B3C" stroke-width="3" opacity=".7"/><circle cx="12" cy="10" r="2.5" fill="${O}" opacity=".5"/><circle cx="${w - 12}" cy="${h - 10}" r="2.5" fill="${O}" opacity=".5"/>`);
+}

@@ -13,7 +13,7 @@ export const TOPICS = {
 export const FILES = {
   l1: 'level1_concepts.csv', l1w: 'level1_waves.csv', l1b: 'level1_baskets.csv',
   l2: 'level2_equation.csv', l3: 'level3_classify.csv', l4: 'level4_profit.csv',
-  l5: 'level5_targets.csv', l6s: 'level6_shelf.csv', l6: 'level6_ratios.csv', l6v: 'level6_verdicts.csv',
+  l5: 'level5_targets.csv', l6s: 'level6_shelf.csv', l6: 'level6_ratios.csv', l6g: 'level6_slingshot.json',
 };
 
 export const CHUTES = ['Non-current Asset', 'Current Asset', 'Liability', 'Current Liability', 'Non-current Liability', 'Equity', 'Notes only / Not recorded'];
@@ -110,7 +110,9 @@ export async function loadAll() {
       const [item, side, ch] = p.map((s) => s.trim()); const change = num(ch);
       if (!['Assets', 'Liabilities', 'Equity'].includes(side)) { bad = `Side "${side}" must be Assets, Liabilities or Equity`; break; }
       if (!Number.isFinite(change) || change === 0) { bad = `Change "${ch}" is not a number`; break; }
-      effects.push({ item, side, change });
+      const alts = item.split('/').map((x) => x.trim()).filter(Boolean);
+      if (alts.length > 1 && side !== 'Assets') { bad = `Alternatives ("${item}") are only allowed for asset jars`; break; }
+      effects.push({ item: alts[0], alts, side, change });
     }
     if (bad) { add(FILES.l2, row, id, bad); return; }
     if (effects.length < 2) { add(FILES.l2, row, id, 'At least two effects are needed'); return; }
@@ -171,7 +173,7 @@ export async function loadAll() {
     l5.push({ id, level: 5, topic: TOPICS[5], stage, subtopic: (r.subtopic || '').trim(), text: r.text.trim(), correct, explanation: r.explanation.trim(), difficulty: num(r.difficulty) || 1 });
   });
 
-  // ---------- Level 6: Ratio Supermarket + Analyst's Verdict ----------
+  // ---------- Level 6: Ratio Supermarket + Headline Slingshot ----------
   const shelf = [];
   parseCsv(raw.l6s.text).forEach((r, i) => {
     const row = i + 2, id = (r.id || '').trim();
@@ -200,18 +202,42 @@ export async function loadAll() {
     if (!uniq(FILES.l6, row, id)) return;
     l6.push({ id, level: 6, topic: TOPICS[6], subtopic: (r.family || '').trim() || 'Ratios', ratio: r.ratio.trim(), numerator: n, denominator: d, formula: r.formula.trim(), unit: pct ? '%' : (r.unit || '').trim(), answer, options: opts, explanation: r.explanation.trim(), difficulty: num(r.difficulty) || 1 });
   });
-  const l6v = [];
-  const VERD = ['Healthy', 'Too low', 'Too high'];
-  parseCsv(raw.l6v.text).forEach((r, i) => {
-    const row = i + 2, id = (r.id || '').trim();
-    if (!truthy(r.active ?? 'TRUE')) return;
-    if (!req(FILES.l6v, row, id, r, ['id', 'ratio', 'company_value', 'industry_value', 'correct', 'explanation'])) return;
-    const correct = r.correct.trim();
-    if (!VERD.includes(correct)) { add(FILES.l6v, row, id, 'correct must be Healthy, Too low or Too high'); return; }
-    if (!uniq(FILES.l6v, row, id)) return;
-    l6v.push({ id, level: 6, topic: TOPICS[6], subtopic: 'Verdict', period: (r.period || '').trim(), ratio: r.ratio.trim(), company: r.company_value.trim(), industry: r.industry_value.trim(), correct, explanation: r.explanation.trim(), difficulty: num(r.difficulty) || 1 });
-  });
+  // Headline Slingshot (Level 6 stage B): rounds of two companies plus headlines that point to exactly one of them
+  const l6g = { industry: '', ratios: [], rounds: [] };
+  let sling = null;
+  try { sling = raw.l6g.text ? JSON.parse(raw.l6g.text) : null; } catch (e) { add(FILES.l6g, '-', '', 'JSON could not be parsed: ' + e.message); }
+  const CATS = ['Liquidity', 'Solvency', 'Profitability', 'Efficiency', 'Market value'];
+  const BANNED = /liquidit|solven|profitab|efficien|market value|ratio|turnover|margin|coverage|P\/E|current assets|debt-equity|collection period/i;
+  if (sling) {
+    l6g.industry = String(sling.industry || '');
+    l6g.ratios = (Array.isArray(sling.ratios) ? sling.ratios : []).filter((r) => r && r.key && r.label);
+    const keys = new Set(l6g.ratios.map((r) => r.key));
+    (Array.isArray(sling.rounds) ? sling.rounds : []).forEach((rd, ri) => {
+      const where = 'round ' + (ri + 1);
+      const cos = Array.isArray(rd.companies) ? rd.companies : [];
+      if (cos.length !== 2 || cos.some((c) => !c.name || !c.ratios)) { add(FILES.l6g, where, rd.id, 'A round needs exactly two companies, each with a name and ratios'); return; }
+      const missing = [...keys].filter((k) => cos.some((c) => !Number.isFinite(Number(c.ratios[k]))));
+      if (missing.length) { add(FILES.l6g, where, rd.id, 'Missing or non-numeric ratio values: ' + missing.join(', ')); return; }
+      const heads = [];
+      (Array.isArray(rd.headlines) ? rd.headlines : []).forEach((h, hi) => {
+        const row = `${where}, headline ${hi + 1}`;
+        if (h.active === false) return;
+        if (!h.id || !h.text || !h.answer || !h.explanation) { add(FILES.l6g, row, h.id, 'Missing id, text, answer or explanation'); return; }
+        const ai = cos.findIndex((c) => c.name === h.answer);
+        if (ai < 0) { add(FILES.l6g, row, h.id, `answer "${h.answer}" is not one of this round's companies`); return; }
+        if (!CATS.includes(h.category)) { add(FILES.l6g, row, h.id, 'category must be one of: ' + CATS.join(', ')); return; }
+        if (!keys.has(h.ratio)) { add(FILES.l6g, row, h.id, `ratio "${h.ratio}" is not in the ratio list`); return; }
+        if (BANNED.test(h.text)) { add(FILES.l6g, row, h.id, 'The headline names a category or ratio; reword it without the giveaway'); return; }
+        const v = cos.map((c) => Number(c.ratios[h.ratio]));
+        const lo = Math.min(...v), hi2 = Math.max(...v);
+        if (!(lo > 0 && hi2 / lo >= 1.5)) { add(FILES.l6g, row, h.id, 'The two companies are too close on this ratio (need at least 1.5 times apart) to be unambiguous'); return; }
+        if (!uniq(FILES.l6g, row, h.id)) return;
+        heads.push({ id: h.id, level: 6, topic: TOPICS[6], subtopic: h.category, source: String(h.source || 'News'), text: h.text, answer: ai, category: h.category, ratio: h.ratio, explanation: h.explanation, prompt: h.text });
+      });
+      if (heads.length) l6g.rounds.push({ id: rd.id || where, companies: cos.map((c) => ({ name: c.name, ceo: c.ceo || '', colour: c.colour || '#0072B2', ratios: c.ratios })), headlines: heads });
+    });
+  } else add(FILES.l6g, '-', '', 'No Headline Slingshot data');
 
   return { config, report, overrides: Object.entries(raw).filter(([, v]) => v.override).map(([k]) => FILES[k]),
-    data: { baskets, waves1, l1, l2, l3, l4, l5, shelf, l6, l6v } };
+    data: { baskets, waves1, l1, l2, l3, l4, l5, shelf, l6, l6g } };
 }

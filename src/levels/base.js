@@ -27,7 +27,7 @@ export class LevelBase extends Phaser.Scene {
     playMusic(this.lv.key);
     this.keyHandler = (e) => this.handleKey(e);
     window.addEventListener('keydown', this.keyHandler);
-    this.events.once('shutdown', () => { window.removeEventListener('keydown', this.keyHandler); UI.clear(); musicTempo(1); });
+    this.events.once('shutdown', () => { window.removeEventListener('keydown', this.keyHandler); document.body.classList.remove('aa-paused'); UI.clear(); musicTempo(1); });
     this.buildWorld();
     this.buildHud();
     this.showIntro();
@@ -240,6 +240,7 @@ export class LevelBase extends Phaser.Scene {
   pause() {
     if (this.frozenBy.has('pause') || this.ended) return;
     this.freeze('pause');
+    document.body.classList.add('aa-paused');
     const el = UI.add(`<div class="frost"></div><div class="panel" style="left:390px;top:150px;width:500px;text-align:center">
       <h2 class="h1" style="margin-bottom:16px">Paused</h2>
       <div style="display:flex;flex-direction:column;gap:12px;align-items:stretch">
@@ -247,7 +248,7 @@ export class LevelBase extends Phaser.Scene {
         <button class="btn cream how">How to play this level</button>
         <button class="btn cream set">Settings</button>
         <button class="btn verm quit">Quit to menu</button></div></div>`, 'screen');
-    const resume = () => { el.remove(); this.modalKey = null; this.unfreeze('pause'); };
+    const resume = () => { el.remove(); document.body.classList.remove('aa-paused'); this.modalKey = null; this.unfreeze('pause'); };
     el.querySelector('.resume').addEventListener('click', resume);
     el.querySelector('.how').addEventListener('click', () => {
       const h = UI.add(`<div class="dim"></div><div class="panel" style="left:240px;top:120px;width:800px"><h2 class="h2">${esc(this.lv.name)}: how to play</h2><ul style="font-size:19px;line-height:1.5">${this.introLines().map((l) => `<li>${l}</li>`).join('')}</ul>${this.introRule() ? `<p>${this.introRule()}</p>` : ''}<button class="btn green">Back</button></div>`, 'screen');
@@ -256,7 +257,7 @@ export class LevelBase extends Phaser.Scene {
     el.querySelector('.set').addEventListener('click', () => openSettings(() => { this.sf = speedFactor(); this.refreshHud(); }));
     el.querySelector('.quit').addEventListener('click', () => {
       if (!confirm('Quit to the main menu? Progress in this run will be lost.')) return;
-      this.ended = true; fadeTo(this, 'Menu');
+      this.ended = true; document.body.classList.remove('aa-paused'); fadeTo(this, 'Menu');
     });
     this.modalKey = (e) => { if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') resume(); return true; };
   }

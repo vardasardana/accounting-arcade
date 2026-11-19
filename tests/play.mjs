@@ -72,9 +72,10 @@ const act = () => {
   if (key === 'L2') {
     const it = sc.cur; if (!it || sc.judging || !sc.weights.length) return 'L2:idle';
     if (!W.acted[it.id + 'seen']) { W.acted[it.id + 'seen'] = 1; return 'L2:ready'; }
+    if (!W.acted.pause) { W.acted.pause = 1; return 'PAUSESHOT'; }
     if (wrongNow) { W.wrong[key] = 1; sc.place(sc.weights[0], sc.jars[0]); sc.weigh(); return 'L2:wrong'; }
     for (const e of it.effects) {
-      const w = sc.weights.find((x) => !x.jar && x.change === e.change); const j = sc.jars.find((x) => x.name === e.item);
+      const w = sc.weights.find((x) => !x.jar && x.change === e.change); const jn = e.alts && e.alts.length > 1 && Math.random() < 0.5 ? e.alts[1] : e.item; const j = sc.jars.find((x) => x.name === jn); if (jn !== e.item) W.bankUsed = (W.bankUsed || 0) + 1;
       if (!w || !j) return 'L2:ERROR missing weight/jar ' + e.item + ' ' + e.change;
       sc.place(w, j);
     }
@@ -122,9 +123,11 @@ const act = () => {
       const i = sc.opts.indexOf(sc.cur.answer); if (i < 0) return 'L6:ERROR answer not in options';
       sc.pay(i); return 'L6:paid ' + sc.cur.id;
     }
-    if (sc.mode === 'verdict' && sc.phase === 'judge') {
-      if (!W.acted.l6verdict) { W.acted.l6verdict = 1; return 'SHOT:16c_level6_verdict'; }
-      sc.verdict(sc.cur.correct); return 'L6:verdict ' + sc.cur.id + ' ' + sc.cur.correct;
+    if (sc.mode === 'sling' && sc.phase === 'aim') {
+      const h = sc.cur;
+      if (!W.acted[h.id + 'seen']) { W.acted[h.id + 'seen'] = 1; return 'L6:ready'; }
+      if (sc.aimAt !== h.answer) { sc.aim(h.answer); if (!W.acted.l6sling) { W.acted.l6sling = 1; return 'SHOT:16c_level6_slingshot'; } return 'L6:aimed'; }
+      sc.launch(); (W.slingShots ||= []).push(h.id); if (!W.acted.l6fly) { W.acted.l6fly = 1; return 'SHOTFLY:16d_level6_slingshot_flight'; } return 'L6:launched ' + h.id;
     }
     return 'L6:idle';
   }
@@ -138,6 +141,8 @@ while (Date.now() - t0 < 25 * 60 * 1000) {
   if (r !== last) { const line = ((Date.now() - t0) / 1000).toFixed(1) + "s " + r; log.push(line); last = r; if (process.env.V) console.log(line); }
   if (r.includes('ERROR')) { console.log('BOT ERROR', r); break; }
   const k = r.split(':')[0]; seenScenes.add(k);
+  if (r === 'PAUSESHOT') { await p.click('#ui .pausebtn'); await p.waitForTimeout(600); if (!process.env.NOSHOTS) await p.screenshot({ path: 'shots/17_pause_blur.png' }); await p.click('#ui .resume'); await p.waitForTimeout(300); continue; }
+  if (r.startsWith('SHOTFLY:')) { await p.waitForTimeout(450); if (!process.env.NOSHOTS) await p.screenshot({ path: `shots/${r.slice(8)}.png` }); continue; }
   if (r.startsWith('SHOT:')) { await p.waitForTimeout(/level1/.test(r) ? 500 : 900); if (!process.env.NOSHOTS) await p.screenshot({ path: `shots/${r.slice(5)}.png` }); continue; }
   if (/^L[234]:ready/.test(r) && !shot[k]) {
     shot[k] = 1; await p.waitForTimeout(1800);
@@ -160,6 +165,7 @@ const sum = await p.evaluate(() => { const r = window.__AA.S.run; return { total
 console.log(log.filter((l) => !/idle|wait|banner|explain/.test(l)).join('\n'));
 console.log('ELAPSED_S', elapsed); console.log(JSON.stringify(sum, null, 1));
 console.log('SHOPS', JSON.stringify(await p.evaluate(() => window.__bot.shops), null, 1));
+console.log('L2 answers given via the Bank jar instead of Cash:', await p.evaluate(() => window.__bot.bankUsed || 0), ' | L6 headlines fired:', await p.evaluate(() => (window.__bot.slingShots || []).join(',')));
 console.log('L1 SETS', JSON.stringify(await p.evaluate(() => window.__bot.l1sets), null, 1));
 console.log('ERRORS', errs.length ? errs.join('\n') : 'none');
 // leaderboard after the run

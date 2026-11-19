@@ -113,10 +113,10 @@
     },
     "6": {
       "ratios": 6,
-      "verdicts": 6,
+      "headlines": 7,
       "pick_time_s": 60,
       "checkout_time_s": 30,
-      "verdict_time_s": 25,
+      "shot_time_s": 40,
       "wrong_item_cost": 5,
       "coin_scale": 0.8
     }

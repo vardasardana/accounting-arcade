@@ -11,7 +11,7 @@ A browser game (Phaser 3 + Vite) for MBA/BBA financial accounting: six levels, o
 ## Question files (`public/data/`)
 - Level 1 Concept Catch: `level1_concepts.csv` (each case file, its one correct concept, and `conflicts_with` concepts that must never share the cart with it), `level1_baskets.csv`, `level1_waves.csv` (`RANDOM` = the basket set changes every two files).
 - Level 5 Cash Flow Shooting Gallery: `level5_targets.csv`. `stage` A or B: `correct` is Operating, Investing or Financing; stage C (indirect method): Add back or Deduct.
-- Level 6 Ratio Supermarket: `level6_shelf.csv` (products: line items and $ million amounts), `level6_ratios.csv` (numerator and denominator are shelf ids; the correct value is computed; three distractor values), `level6_verdicts.csv` (Analyst's Verdict: Healthy, Too low or Too high).
+- Level 6 Ratio Supermarket: `level6_shelf.csv` (products: line items and $ million amounts), `level6_ratios.csv` (numerator and denominator are shelf ids; the correct value is computed; three distractor values), `level6_slingshot.json` (Headline Slingshot: rounds of two rival companies with ratio cards, and headlines with the answer company, category and ratio; the validator rejects headlines that name a ratio or category, and needs the two companies' values on the tested ratio to differ by at least 1.5 times).
 
 ## Economy (`config.json`)
 - Coins per answer: `scoring` (base, speed bonus, streak steps, cap) times `levels.N.coin_scale` (evens out long and short levels). Level bonus: `level_complete` + `per_star`.

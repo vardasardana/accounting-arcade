@@ -22,7 +22,7 @@ const GUNS = {
 };
 const STAGE_INFO = {
   A: { title: 'Stage A: Operating, Investing or Financing?', sub: 'Pick a gun (<span class="kbd">1</span> O, <span class="kbd">2</span> I, <span class="kbd">3</span> F, or tap a gun), then shoot the target (tap it, or press <span class="kbd">Space</span>).', guns: 'cf', theme: 'Shoot with the right gun: O, I or F' },
-  B: { title: 'Stage B: Ind AS 7 specials', sub: 'Interest, dividends, tax and buybacks. For a company that is not a bank or finance company, Ind AS 7 says: interest and dividends <b>paid</b> = Financing; interest and dividends <b>received</b> = Investing; income tax paid = Operating.', guns: 'cf', theme: 'Ind AS 7 specials: think before you shoot' },
+  B: { title: 'Stage B: trickier transactions', sub: 'The same three guns. Read each target carefully before you shoot.', guns: 'cf', theme: 'Trickier transactions: think before you shoot' },
   C: { title: 'Stage C: indirect method', sub: 'Start from <b>profit before tax</b> and work out cash from operations. The guns change: <b>+ Add back</b> (<span class="kbd">1</span>) or <b>− Deduct</b> (<span class="kbd">2</span>). Non-cash expenses are added back; an increase in a current asset is deducted.', guns: 'adj', theme: 'Indirect method: Add back or Deduct?' },
 };
 
@@ -30,14 +30,14 @@ export class Level5 extends LevelBase {
   constructor() { super('L5', 5); }
   introLines() {
     return [
-      'Welcome to the fairground! Wooden targets pop up, each showing a cash flow of <b>Copperleaf Coffee Ltd</b> ($ million).',
+      'Welcome to the fairground! Wooden targets pop up, each showing a cash flow of <b>Skyroute Airways Ltd</b>, an airline ($ million).',
       'You have three guns: <b>O</b> Operating, <b>I</b> Investing, <b>F</b> Financing. Choose one with <span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span> or by tapping it.',
       'Then shoot the target: click or tap it, or press <span class="kbd">Space</span>. Right gun = coins. Wrong gun = lose a heart.',
       'Each target stays up for a few seconds. If it drops before you shoot, it counts as a miss.',
       'In the last stage the guns change to <b>Add back</b> and <b>Deduct</b> for the indirect method.',
     ];
   }
-  introRule() { return '<b>Ind AS 7, for a company that is not a financial institution:</b> interest and dividends <b>paid</b> = Financing; interest and dividends <b>received</b> = Investing; income tax paid = Operating (unless linked to investing or financing).'; }
+  introRule() { return ''; }
   buildWorld() {
     bg(this, 'bg_fair');
     this.lights = [];

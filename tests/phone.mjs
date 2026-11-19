@@ -31,6 +31,16 @@ const r = await p.evaluate(() => { const sc = window.__AA.game.scene.getScene('L
 await p.tap(`#ui .prod[data-id="${r.n}"]`); await p.waitForTimeout(300); await p.tap(`#ui .prod[data-id="${r.d}"]`); await p.waitForTimeout(400);
 await p.screenshot({ path: 'shots/54_phone_level6.png', scale: 'css' });
 console.log('PHONE L6 trolley:', await p.evaluate(() => JSON.stringify(window.__AA.game.scene.getScene('L6').slots)), 'expected', JSON.stringify(r));
+// Level 6 stage B on a phone: tap a company card to aim, then tap Launch
+await p.evaluate(() => { const sc = window.__AA.game.scene.getScene('L6'); sc.ri = sc.ratios.length; sc.phase = 'done'; sc.startVerdicts(); });
+await p.waitForTimeout(800); { const b = await p.$('#ui .banner.pe'); if (b) await b.tap(); }
+await p.waitForTimeout(800); { const b = await p.$('#ui .banner.pe'); if (b) await b.tap(); }
+await p.waitForTimeout(900);
+const hs = await p.evaluate(() => { const sc = window.__AA.game.scene.getScene('L6'); return { ans: sc.cur.answer, id: sc.cur.id, c0: sc.st.correct }; });
+await p.tap(`#ui .rcard[data-i="${hs.ans}"]`); await p.waitForTimeout(300);
+await p.screenshot({ path: 'shots/55_phone_level6_slingshot.png', scale: 'css' });
+await p.tap('#ui .launch'); await p.waitForTimeout(2200);
+console.log('PHONE L6 slingshot hit right CEO:', await p.evaluate(() => window.__AA.game.scene.getScene('L6').st.correct) > hs.c0, hs.id);
 await p.setViewportSize({ width: 390, height: 844 }); await p.waitForTimeout(600);
 await p.screenshot({ path: 'shots/52_phone_portrait_rotate_prompt.png' });
 console.log('PAGE ERRORS', errs.length ? errs : 'none');

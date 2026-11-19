@@ -1,12 +1,14 @@
-// Level 6: Ratio Supermarket (build the ratio, then compute it at checkout) followed by Analyst's Verdict.
+// Level 6: Ratio Supermarket (build the ratio, then compute it at checkout) followed by Headline Slingshot.
 import { LevelBase } from './base.js';
 import { S, fs } from '../core/state.js';
 import { UI, esc, $, $$ } from '../core/ui.js';
 import { sfx, musicTempo } from '../core/audio.js';
 import { bg, shuffle } from '../scenes/common.js';
-import { coinBurst, confetti } from './fx.js';
+import { coinBurst, confetti, puff } from './fx.js';
 import { uri } from '../art/svg.js';
-import { trolley } from '../art/scenes.js';
+import { trolley, SLING } from '../art/scenes.js';
+
+const TOWER_X = [795, 1105], CARD_X = [650, 960], GRAV = 900, PULL_K = 6.4;
 
 const FAM = { Liquidity: '💧', Solvency: '🛡️', Profitability: '📈', Efficiency: '⚙️' };
 const PCOL = ['#56B4E9', '#E69F00', '#009E73', '#CC79A7', '#F0E442'];
@@ -16,24 +18,25 @@ export class Level6 extends LevelBase {
   constructor() { super('L6', 6); }
   introLines() {
     return [
-      '<b>Ratio Supermarket.</b> The shelves hold line items from <b>Copperleaf Coffee Ltd</b>’s statements ($ million). Your shopping list names one ratio.',
+      '<b>Ratio Supermarket.</b> The shelves hold line items from <b>Medivale Pharma Ltd</b>’s statements ($ million). Your shopping list names one ratio.',
       'Put the <b>numerator</b> (top of the formula) in the TOP of the trolley and the <b>denominator</b> in the BOTTOM: tap a product to drop it into the glowing slot, or drag it there. Tap a slot to choose it.',
       'A wrong product costs a few coins and Penny explains why; then try again. When both are right, press <b>Checkout</b> and pick the correct value (<span class="kbd">1</span>–<span class="kbd">4</span>).',
-      '<b>Analyst’s Verdict.</b> Compare Copperleaf’s ratio with the industry average and rule: <b>Too low</b> (<span class="kbd">1</span>), <b>Healthy</b> (<span class="kbd">2</span>) or <b>Too high</b> (<span class="kbd">3</span>).',
+      '<b>Headline Slingshot.</b> Two rival companies stand on their towers with their ratio cards. A news headline is loaded in the slingshot: decide which company it is about and fire it at that CEO. Drag back and let go, or tap a company (or press <span class="kbd">1</span>/<span class="kbd">2</span>) and press <b>Launch</b> (<span class="kbd">Space</span>). A hit on the wrong CEO, or a miss, costs a heart.',
     ];
   }
-  introRule() { return 'Higher is not always better, and lower is not always better: always compare with the industry.'; }
+  introRule() { return 'Read every number on both cards before you fire.'; }
   buildWorld() {
     bg(this, 'bg_market');
-    this.add.image(855, 562, 'avatar_' + (S.player?.avatar ?? 0)).setScale(0.8);
+    this.avatarA = this.add.image(855, 562, 'avatar_' + (S.player?.avatar ?? 0)).setScale(0.8);
+    this.bgB = this.add.image(0, 0, 'bg_sling').setOrigin(0, 0).setDisplaySize(1280, 720).setDepth(1).setVisible(false);
     this.cfg = S.config.levels['6'] || {};
     this.ratios = shuffle(S.data.l6).slice(0, this.cfg.ratios ?? 6);
-    this.verdicts = shuffle(S.data.l6v).slice(0, this.cfg.verdicts ?? 6);
-    this.total = this.ratios.length + this.verdicts.length; this.done = 0;
+    this.slingRounds = S.data.l6g.rounds;
+    this.total = this.ratios.length + this.slingRounds.reduce((a, r) => a + r.headlines.length, 0); this.done = 0;
     this.layer = UI.add('', '');
     this.byFam = {};
-    this.tips = { Liquidity: 'Remember: current ratio = current assets ÷ current liabilities.', Solvency: 'Remember: debt means borrowings only, and interest cover uses EBIT.', Profitability: 'Remember: margins and returns use net profit after tax unless the ratio says otherwise.', Efficiency: 'Remember: inventory turnover uses cost of goods sold, not revenue.', Verdict: 'Remember: compare with the industry; too high can be as bad as too low.' };
-    this.endLine = 'Shopping done and verdicts delivered!';
+    this.tips = { Liquidity: 'Remember: current ratio = current assets ÷ current liabilities.', Solvency: 'Remember: debt means borrowings only, and interest cover uses EBIT.', Profitability: 'Remember: margins and returns use net profit after tax unless the ratio says otherwise.', Efficiency: 'Remember: inventory turnover uses cost of goods sold, not revenue.', 'Market value': 'Remember: a high P/E means investors pay more for each unit of earnings.' };
+    this.endLine = 'Shopping done and every headline delivered!';
   }
   begin() { this.stageNo = 0; this.startSupermarket(); }
   startSupermarket() {
@@ -138,7 +141,7 @@ export class Level6 extends LevelBase {
       <div class="hd">🧾 Checkout: ${esc(r.ratio)}</div>
       <div class="eq"><div><span>${esc(n.label)}</span><b>${n.amount}</b></div><div class="ln"></div><div><span>${esc(d.label)}</span><b>${d.amount}</b></div></div>
       ${r.unit === '%' ? '<div class="mul">× 100 (it is a percentage)</div>' : ''}
-      <div class="q">What is Copperleaf’s ${esc(r.ratio)}?</div>
+      <div class="q">What is Medivale’s ${esc(r.ratio)}?</div>
       <div class="opts">${this.opts.map((o, i) => `<button class="btn cream opt" data-i="${i}"><span class="kbd" style="font-size:14px">${i + 1}</span> ${esc(o)}${u}</button>`).join('')}</div></div>`);
     $$(this.layer, '.opt').forEach((b) => b.addEventListener('click', () => this.pay(Number(b.dataset.i))));
     this.setTheme(`Checkout: work out the ${esc(r.ratio)}`);
@@ -158,77 +161,168 @@ export class Level6 extends LevelBase {
       this.markCorrect({ item: r, given: given + u, correct: r.answer + u, x: 640, y: 160, fast: (this.time.now - this.born2) / 1000 < this.phaseT / 2, label: `${r.ratio} = ${r.answer}${u}`, rt });
       this.wait(1.6, () => this.nextRatio());
     } else {
-      this.markWrong({ item: r, given: given ? given + u : 'time up', correctText: `${r.ratio} = ${r.answer}${u}`, explanation: r.explanation, rt, prompt: `${r.ratio} for Copperleaf Coffee Ltd`, after: () => this.nextRatio() });
+      this.markWrong({ item: r, given: given ? given + u : 'time up', correctText: `${r.ratio} = ${r.answer}${u}`, explanation: r.explanation, rt, prompt: `${r.ratio} for Medivale Pharma Ltd`, after: () => this.nextRatio() });
     }
   }
-  // ---------- Stage B ----------
+  // ---------- Stage B: Headline Slingshot ----------
   startVerdicts() {
-    this.layer.innerHTML = ''; this.mode = 'verdict'; this.vi = 0;
+    this.layer.innerHTML = ''; this.mode = 'sling'; this.gi = 0; this.rIdx = -1;
     this.setStageDots(2, 2, 'Stage'); musicTempo(1.1);
-    this.setTheme('Analyst’s Verdict: compare with the industry');
+    this.bgB.setVisible(true); this.avatarA.setVisible(false);
+    this.sling = this.add.image(SLING.x, SLING.ground - 80, 'slingshot').setDepth(5);
+    this.band = this.add.graphics().setDepth(6); this.dots = this.add.graphics().setDepth(7);
+    this.proj = this.add.image(SLING.x, SLING.y, 'newspaper').setDepth(8).setVisible(false);
+    this.input.on('pointerdown', (p) => this.slingDown(p));
+    this.input.on('pointermove', (p) => this.slingMove(p));
+    this.input.on('pointerup', (p) => this.slingUp(p));
+    this.setTheme('Headline Slingshot: which company is the news about?');
     sfx('ding');
-    this.banner('Stage B: Analyst’s Verdict', 'You are the judge. Compare Copperleaf’s ratio with the industry average. <b>Healthy</b> = close to the average. <b>Too low</b> or <b>Too high</b> = far below or far above it. Higher is not always better!', 7, () => this.nextVerdict());
+    this.banner('Stage B: Headline Slingshot', 'A news headline is loaded in the slingshot. Read both companies’ numbers, then fire the headline at the CEO it is about. Drag back and let go, or tap a company and press <b>Launch</b>.', 7, () => this.nextRoundB());
   }
-  nextVerdict() {
-    this.layer.innerHTML = '';
-    if (this.vi >= this.verdicts.length) { this.finishLevel(false); return; }
-    const v = this.verdicts[this.vi++]; this.cur = v; this.peekItem = null; this.phase = 'judge';
-    this.phaseT = this.T(this.cfg.verdict_time_s || 25); this.left = this.phaseT; this.born = this.time.now;
-    const cv = parseFloat(v.company), iv = parseFloat(v.industry), mx = Math.max(cv, iv) || 1;
-    const bar = (lab, val, n, col) => `<div class="vb"><span class="lb">${lab}</span><div class="tr"><i style="width:${Math.max(3, n / mx * 100)}%;background:${col}"></i></div><b>${esc(val)}</b></div>`;
-    this.layer.innerHTML = `<div class="dim"></div><div class="bench pe">
-      <div class="hd">⚖️ Copperleaf Coffee Ltd · ${esc(v.period)} <span>${this.vi} of ${this.verdicts.length}</span></div>
-      <div class="rn">${esc(v.ratio)}</div>
-      ${bar('Copperleaf', v.company, cv, '#0072B2')}${bar('Industry average', v.industry, iv, '#999')}
-      <div class="rule">Healthy = close to the industry average · Too low / Too high = far below / far above it</div></div>
-      <div class="gavels">${['Too low', 'Healthy', 'Too high'].map((g, i) => `<button class="btn ${['orange', 'green', 'verm'][i]} big gv pe" data-g="${g}"><span class="kbd" style="font-size:15px">${i + 1}</span> ${{ 'Too low': '⬇', Healthy: '✔', 'Too high': '⬆' }[g]} ${g}</button>`).join('')}</div>`;
-    $$(this.layer, '.gv').forEach((b) => b.addEventListener('click', () => this.verdict(b.dataset.g)));
-    this.setPreviewKey(v.correct);
+  nextRoundB() {
+    this.rIdx++;
+    const rd = this.slingRounds[this.rIdx];
+    if (!rd) { this.finishLevel(false); return; }
+    this.rd = rd; this.hq = shuffle(rd.headlines); this.hi = 0;
+    this.buildTowers(rd);
+    this.banner(`Round ${this.rIdx + 1}: ${rd.companies[0].name} vs ${rd.companies[1].name}`, `Both are ${esc(S.data.l6g.industry.toLowerCase())} companies. Study their numbers before you fire.`, 4, () => this.nextHeadline());
   }
-  verdict(g) {
-    if (this.frozen || this.mode !== 'verdict' || this.phase !== 'judge') return;
-    const v = this.cur; this.phase = 'done'; this.setTimer(null);
+  buildTowers(rd) {
+    (this.towers || []).forEach((t) => t.parts.forEach((o) => o.destroy()));
+    const R = S.data.l6g.ratios;
+    const fmtV = (r, v) => v + (r.unit === '%' ? '%' : r.unit ? ' ' + r.unit : '');
+    this.towers = rd.companies.map((c, i) => {
+      const x = TOWER_X[i], parts = [], blocks = [];
+      for (let k = 0; k < 3; k++) { const b = this.add.image(x, SLING.ground - 21 - k * 42, 'block').setDepth(3); blocks.push(b); parts.push(b); }
+      const key = c.colour.replace('#', '');
+      const ceo = this.add.image(x, SLING.ground - 126 - 60, this.textures.exists('ceo_' + key) ? 'ceo_' + key : 'ceo_0072B2').setDepth(4);
+      const hat = this.add.image(x, SLING.ground - 126 - 122, this.textures.exists('hat_' + key) ? 'hat_' + key : 'hat_0072B2').setDepth(4);
+      const plate = this.add.text(x, SLING.ground - 63, c.name.replace(/ Ltd$/, ''), { fontFamily: 'Fredoka', fontStyle: '700', fontSize: fs(15) + 'px', color: '#fff', backgroundColor: c.colour, padding: { x: 6, y: 2 } }).setOrigin(0.5).setDepth(4);
+      parts.push(ceo, hat, plate);
+      const zone = this.add.zone(x, SLING.ground - 160, 150, 330).setInteractive({ useHandCursor: true }).on('pointerdown', () => this.aim(i));
+      parts.push(zone);
+      return { x, blocks, ceo, hat, plate, parts, c };
+    });
+    this.layer.innerHTML = rd.companies.map((c, i) => `<button class="rcard pe" data-i="${i}" style="left:${CARD_X[i]}px;border-color:${c.colour}" aria-label="Aim at ${esc(c.name)}">
+      <div class="hd" style="background:${c.colour}">${esc(c.name)}<small>CEO ${esc(c.ceo)}</small></div>
+      <table>${R.map((r) => `<tr data-k="${r.key}"><td>${esc(r.label)}</td><td>${esc(fmtV(r, c.ratios[r.key]))}</td></tr>`).join('')}</table></button>`).join('') +
+      `<div class="headline"><div class="src">📰 <span></span></div><div class="tx"></div><div class="aimhint">Drag the paper back and let go, or tap a company and press <b>Launch</b> (keys 1, 2, Space).</div></div>
+      <button class="btn orange launch pe" style="position:absolute;left:390px;top:548px;width:200px">🚀 Launch <span class="kbd" style="font-size:13px">Space</span></button>`;
+    $$(this.layer, '.rcard').forEach((b) => b.addEventListener('click', () => this.aim(Number(b.dataset.i))));
+    $(this.layer, '.launch').addEventListener('click', () => this.launch());
+  }
+  nextHeadline() {
+    if (this.hi >= this.hq.length) { this.wait(0.6, () => this.nextRoundB()); return; }
+    const h = this.hq[this.hi++]; this.cur = h; this.peekItem = null; this.phase = 'aim'; this.aimAt = null; this.flying = null;
+    $$(this.layer, '.rcard').forEach((b) => b.classList.remove('aimed'));
+    $$(this.layer, '.rcard tr').forEach((tr) => tr.classList.remove('peek'));
+    $(this.layer, '.headline .src span').textContent = h.source; $(this.layer, '.headline .tx').textContent = '“' + h.text + '”';
+    this.proj.setPosition(SLING.x, SLING.y).setVisible(true).setAngle(0);
+    this.drawBand(SLING.x, SLING.y); this.dots.clear();
+    this.phaseT = this.T(this.cfg.shot_time_s || 40); this.left = this.phaseT; this.born = this.time.now;
+    this.setPreviewKey(this.rd.companies[h.answer].name);
+    sfx('rustle');
+  }
+  drawBand(px, py) {
+    const g = this.band; g.clear(); g.lineStyle(6, 0x5B3A1E, 1);
+    g.lineBetween(SLING.x - 36, SLING.y - 14, px, py); g.lineBetween(SLING.x + 36, SLING.y - 14, px, py);
+  }
+  velFor(i) { // velocity that lands the paper on CEO i
+    const tx = TOWER_X[i], ty = SLING.ground - 190, T = i ? 1.15 : 1.0; // the far shot flies higher so it clears the near tower
+    return { vx: (tx - SLING.x) / T, vy: (ty - SLING.y - 0.5 * GRAV * T * T) / T };
+  }
+  drawArc(vx, vy) {
+    const g = this.dots; g.clear(); g.fillStyle(0xffffff, 0.95);
+    for (let t = 0.08; t < 1.6; t += 0.08) { const x = SLING.x + vx * t, y = SLING.y + vy * t + 0.5 * GRAV * t * t; if (y > SLING.ground || x > 1280) break; g.fillCircle(x, y, 5); if ((this.towers || []).some((tw) => Math.abs(x - tw.x) < 62 && y > SLING.ground - 260)) break; }
+  }
+  aim(i) {
+    if (this.frozen || this.mode !== 'sling' || this.phase !== 'aim' || !this.towers?.[i]) return;
+    this.aimAt = i; sfx('click');
+    $$(this.layer, '.rcard').forEach((b) => b.classList.toggle('aimed', Number(b.dataset.i) === i));
+    const v = this.velFor(i); this.drawArc(v.vx, v.vy);
+    const k = 0.11, px = SLING.x - v.vx * k, py = SLING.y - v.vy * k * 0.5;
+    this.proj.setPosition(px, py); this.drawBand(px, py);
+  }
+  launch(v) {
+    if (this.frozen || this.mode !== 'sling' || this.phase !== 'aim') return;
+    if (!v) { if (this.aimAt === null) { this.floatText(490, 520, 'Tap a company to aim first', 'lbl'); return; } v = this.velFor(this.aimAt); }
+    this.phase = 'fly'; this.setTimer(null); this.dots.clear(); this.drawBand(SLING.x, SLING.y);
+    this.flying = { x: SLING.x, y: SLING.y, vx: v.vx, vy: v.vy }; sfx('whoosh');
+  }
+  slingDown(p) {
+    if (this.frozen || this.mode !== 'sling' || this.phase !== 'aim') return;
+    if (Math.hypot(p.x - SLING.x, p.y - SLING.y) < 90) this.dragging = true;
+  }
+  slingMove(p) {
+    if (!this.dragging || this.frozen) return;
+    let dx = p.x - SLING.x, dy = p.y - SLING.y; const d = Math.hypot(dx, dy), m = 150;
+    if (d > m) { dx *= m / d; dy *= m / d; }
+    this.proj.setPosition(SLING.x + dx, SLING.y + dy); this.drawBand(SLING.x + dx, SLING.y + dy);
+    this.drawArc(-dx * PULL_K, -dy * PULL_K);
+  }
+  slingUp() {
+    if (!this.dragging) return; this.dragging = false;
+    const dx = this.proj.x - SLING.x, dy = this.proj.y - SLING.y;
+    if (Math.hypot(dx, dy) < 25) { this.proj.setPosition(SLING.x, SLING.y); this.drawBand(SLING.x, SLING.y); this.dots.clear(); return; }
+    this.launch({ vx: -dx * PULL_K, vy: -dy * PULL_K });
+  }
+  flyStep(dt) {
+    const f = this.flying; if (!f) return;
+    let hit = -1; const n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n;
+    for (let s = 0; s < n && hit < 0; s++) { // exact ballistic sub-steps, so the flight matches the aiming dots at any frame rate
+      f.x += f.vx * h; f.y += f.vy * h + 0.5 * GRAV * h * h; f.vy += GRAV * h;
+      hit = this.towers.findIndex((t) => Math.abs(f.x - t.x) < 62 && f.y > SLING.ground - 260 && f.y < SLING.ground);
+    }
+    this.proj.setPosition(f.x, f.y).setAngle(this.proj.angle + 540 * dt);
+    if (hit >= 0) { this.flying = null; this.shotResult(hit, f.x, f.y); return; }
+    if (f.y >= SLING.ground || f.x > 1300 || f.x < -40) { this.flying = null; this.shotResult(-1, Math.min(1260, Math.max(20, f.x)), Math.min(f.y, SLING.ground)); }
+  }
+  shotResult(i, x, y) {
+    const h = this.cur, rd = this.rd; this.phase = 'done';
     const rt = Math.round(this.time.now - this.born); this.done++; this.setProgress(this.done / this.total);
-    const fam = (this.byFam.Verdict ||= { c: 0, n: 0 }); fam.n++;
-    $$(this.layer, '.gv').forEach((b) => { b.style.opacity = b.dataset.g === v.correct || b.dataset.g === g ? 1 : 0.4; });
-    const prompt = `${v.ratio}: Copperleaf ${v.company} vs industry ${v.industry}`;
-    if (g === v.correct) {
-      fam.c++; sfx('fanfare'); coinBurst(this, 640, 330);
-      this.markCorrect({ item: v, given: g, correct: v.correct, x: 640, y: 150, base: S.config.scoring.verdict_base, fast: rt / 1000 < this.phaseT / 2, label: v.correct + '!', rt });
-      this.showNote(v, () => this.nextVerdict());
-    } else this.markWrong({ item: v, given: g || 'time up', correctText: v.correct, explanation: v.explanation, rt, prompt, after: () => this.nextVerdict() });
+    const fam = (this.byFam[h.category] ||= { c: 0, n: 0 }); fam.n++;
+    this.proj.setVisible(false);
+    const r = S.data.l6g.ratios.find((q) => q.key === h.ratio);
+    const vals = rd.companies.map((c) => `${c.name.replace(/ Ltd$/, '')} ${c.ratios[h.ratio]}${r.unit === '%' ? '%' : r.unit ? ' ' + r.unit : ''}`).join(' vs ');
+    if (i === h.answer) {
+      fam.c++;
+      const t = this.towers[i];
+      sfx('fanfare'); coinBurst(this, t.x, t.ceo.y - 40);
+      this.tweens.add({ targets: t.hat, y: t.hat.y - 160, x: t.hat.x + 120, angle: 300, alpha: 0, duration: 700 });
+      t.blocks.forEach((b, k) => this.tweens.add({ targets: b, x: b.x + (k % 2 ? 50 : -40) + 30, y: SLING.ground - 21, angle: k % 2 ? 80 : -70, duration: 450, delay: 80 * (2 - k), ease: 'Quad.In' }));
+      this.tweens.add({ targets: t.ceo, y: SLING.ground - 60, angle: -12, duration: 450, ease: 'Quad.In' });
+      this.markCorrect({ item: h, given: rd.companies[i].name, correct: rd.companies[h.answer].name, x: t.x, y: 330, fast: rt / 1000 < this.phaseT / 2, label: 'Headline lands! ' + rd.companies[i].name.replace(/ Ltd$/, ''), rt });
+      this.wait(1.8, () => { this.buildTowers(rd); this.nextHeadline(); });
+    } else {
+      puff(this, x, y - 10);
+      if (i >= 0) { const t = this.towers[i]; this.tweens.add({ targets: t.ceo, angle: 10, duration: 80, yoyo: true, repeat: 3 }); }
+      const given = i >= 0 ? rd.companies[i].name : 'missed both';
+      this.markWrong({ item: h, given, correctText: `${rd.companies[h.answer].name} (${r.label}: ${vals})`, explanation: h.explanation, rt, prompt: '“' + h.text + '”', after: () => this.nextHeadline() });
+    }
   }
-  // after a right verdict, show the teaching point briefly (no heart lost)
-  showNote(v, next) {
-    const el = document.createElement('div'); el.className = 'vnote pe'; el.innerHTML = `<b>Why:</b> ${esc(v.explanation)}<div style="text-align:right;margin-top:6px"><button class="btn small green">Next ▶</button></div>`;
-    this.layer.appendChild(el);
-    let done = false; const go = () => { if (done) return; done = true; this.modalKey = null; this.unfreeze('note'); next(); };
-    this.freeze('note');
-    el.querySelector('button').addEventListener('click', go);
-    this.modalKey = (e) => { if (e.key === 'Enter' || e.key === ' ') go(); return true; };
-    setTimeout(go, (S.config.explanation_auto_close_s || 12) * 1000);
-  }
-  currentItem() { return (this.mode === 'shop' && this.phase === 'pick') || (this.mode === 'verdict' && this.phase === 'judge') ? this.cur : null; }
+  currentItem() { return (this.mode === 'shop' && this.phase === 'pick') || (this.mode === 'sling' && this.phase === 'aim') ? this.cur : null; }
   applyPeek(it) {
     if (this.mode === 'shop') { this.setTheme(`💡 ${esc(it.ratio)} = ${esc(it.formula)}`); return true; }
-    this.setTheme('💡 Is Copperleaf’s figure close to the industry average, or far from it?'); return true;
+    $$(this.layer, `.rcard tr[data-k="${it.ratio}"]`).forEach((tr) => tr.classList.add('peek'));
+    this.setTheme('💡 The highlighted row is the one this news is about.'); return true;
   }
   onKey(e) {
     if (this.mode === 'shop' && this.phase === 'checkout' && /^[1-4]$/.test(e.key)) this.pay(Number(e.key) - 1);
     else if (this.mode === 'shop' && this.phase === 'pick' && e.key === 'Enter' && this.slots.top && this.slots.bottom) this.checkout();
-    else if (this.mode === 'verdict' && this.phase === 'judge' && /^[1-3]$/.test(e.key)) this.verdict(['Too low', 'Healthy', 'Too high'][Number(e.key) - 1]);
+    else if (this.mode === 'sling' && this.phase === 'aim') { if (/^[12]$/.test(e.key)) this.aim(Number(e.key) - 1); else if (e.key === ' ' || e.key === 'Enter') this.launch(); }
   }
-  tick(g) {
-    const timed = (this.mode === 'shop' && (this.phase === 'pick' || this.phase === 'checkout')) || (this.mode === 'verdict' && this.phase === 'judge');
+  tick(g, real) {
+    if (this.mode === 'sling' && this.phase === 'fly') { this.flyStep(Math.min(real, 0.05)); return; }
+    const timed = (this.mode === 'shop' && (this.phase === 'pick' || this.phase === 'checkout')) || (this.mode === 'sling' && this.phase === 'aim');
     if (!timed) { this.setTimer(null); return; }
     this.left -= g / this.sf; this.setTimer(this.left, this.phaseT);
     if (this.left > 0) return;
-    if (this.mode === 'verdict') this.verdict(null);
+    if (this.mode === 'sling') { this.dragging = false; this.dots.clear(); this.shotResult(-1, SLING.x, SLING.y); }
     else if (this.phase === 'checkout') this.pay(-1);
     else { // ran out of shopping time
       const r = this.cur; this.phase = 'done'; this.setTimer(null); this.done++; this.setProgress(this.done / this.total);
       (this.byFam[r.subtopic] ||= { c: 0, n: 0 }).n++;
-      this.markWrong({ item: r, given: 'time up', correctText: `${r.ratio} = ${r.formula} = ${r.answer}${r.unit === '%' ? '%' : r.unit === 'times' ? ' times' : ''}`, explanation: r.explanation, rt: Math.round(this.time.now - this.born), prompt: `${r.ratio} for Copperleaf Coffee Ltd`, after: () => this.nextRatio() });
+      this.markWrong({ item: r, given: 'time up', correctText: `${r.ratio} = ${r.formula} = ${r.answer}${r.unit === '%' ? '%' : r.unit === 'times' ? ' times' : ''}`, explanation: r.explanation, rt: Math.round(this.time.now - this.born), prompt: `${r.ratio} for Medivale Pharma Ltd`, after: () => this.nextRatio() });
     }
   }
   endExtra() { return { themes: this.byFam }; }

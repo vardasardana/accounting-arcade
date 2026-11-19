@@ -15,7 +15,6 @@ export class Level1 extends LevelBase {
       'Case files fall from the shelf. Each one shows one accounting concept.',
       'Slide the cart with <span class="kbd">←</span> <span class="kbd">→</span>, the mouse or a finger, so the right basket is under the file.',
       'Or press <span class="kbd">1</span>–<span class="kbd">4</span> (or tap a basket label) and the cart glides there for you.',
-      'The baskets change after every <b>two</b> files, so read the labels each time. Two files in a row can belong in the same basket.',
       'Press <span class="kbd">↓</span> to drop a file faster once you are sure (speed bonus).',
     ];
   }
@@ -124,14 +123,14 @@ export class Level1 extends LevelBase {
     }
     this.queue = cards; this.cardIdx = 0; this.wave = w;
     if (this.waveIdx === this.waves.length - 1) musicTempo(1.12);
-    const names = this.sets ? 'The baskets on your cart change after every <b>two</b> files. A basket can come back, and two files in a row can belong in the same basket, so read every label!' : w.baskets.map((b) => this.byName[b]?.short || b).join(' · ');
+    const names = this.sets ? 'Read every basket label before you catch a file.' : w.baskets.map((b) => this.byName[b]?.short || b).join(' · ');
     this.setTheme(`Audit round ${w.wave}: ${w.name}`);
     sfx('ding');
     this.banner(`Audit round ${w.wave}: ${w.name}`, names, 4.2, () => this.spawn());
   }
   spawn() {
     if (this.cardIdx >= this.queue.length) { this.wait(0.6, () => this.nextWave()); return; }
-    if (this.sets && this.cardIdx % 2 === 0) { this.setBaskets(this.sets[Math.floor(this.cardIdx / 2)]); if (this.cardIdx > 0) { sfx('whoosh'); this.floatText(640, 470, '🔄 New baskets!', 'lbl'); this.basketChanges = (this.basketChanges || 0) + 1; } }
+    if (this.sets && this.cardIdx % 2 === 0) this.setBaskets(this.sets[Math.floor(this.cardIdx / 2)]);
     const item = this.queue[this.cardIdx++];
     const col = COLS[Math.floor(Math.random() * 3)];
     const c = this.add.container(col, TOP_Y).setDepth(30);

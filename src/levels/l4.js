@@ -15,7 +15,7 @@ export class Level4 extends LevelBase {
   constructor() { super('L4', 4); }
   introLines() {
     return [
-      'Drive <b>Copperleaf Coffee Ltd</b> ($ million) from Revenue to the NET PROFIT finish line.',
+      'Drive <b>Threadline Fashions Ltd</b>, a fashion retailer ($ million), from Revenue to the NET PROFIT finish line.',
       'Before each fork a question appears. Steer into the lane with the right answer: <span class="kbd">←</span><span class="kbd">→</span>, <span class="kbd">1</span>–<span class="kbd">3</span>, or tap a lane sign.',
       'Sure already? Press <span class="kbd">↑</span> (or double-tap a sign) to lock in early for a speed bonus.',
       'Every correct fork prints a line on your Income Statement receipt.',
@@ -39,7 +39,7 @@ export class Level4 extends LevelBase {
     this.ui = UI.add(`<div class="ribbon-dots">${CHECKS.map((c) => `<span>${c}</span>`).join('')}</div>
       <div class="billboard" style="display:none"><div class="q"></div><div class="hint"></div></div>
       <div class="signs"></div>
-      <div class="receipt"><div style="font-family:var(--hd);font-weight:700;color:var(--navy);font-size:20px;margin-bottom:6px">Live Income Statement</div><div class="muted" style="font-size:15px;margin-bottom:8px">Copperleaf Coffee Ltd ($ million)</div><div class="roll"></div></div>`, '');
+      <div class="receipt"><div style="font-family:var(--hd);font-weight:700;color:var(--navy);font-size:20px;margin-bottom:6px">Live Income Statement</div><div class="muted" style="font-size:15px;margin-bottom:8px">Threadline Fashions Ltd ($ million)</div><div class="roll"></div></div>`, '');
     this.total = this.items.length; this.done = 0; this.receipt = [];
     this.tips = { COGS: 'Remember: freight outward and head-office costs are never part of COGS.', 'What counts as income': 'Remember: money from shareholders is equity, not income.' };
     this.endLine = 'NET PROFIT – you crossed the finish line!';

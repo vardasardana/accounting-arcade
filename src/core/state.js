@@ -5,7 +5,7 @@ export const LEVELS = [
   { n: 3, key: 'L3', name: 'Asset Sorter Conveyor', topic: 'Balance Sheet classification', goal: 'Push every crate into the right Balance Sheet chute.', place: 'The factory floor' },
   { n: 4, key: 'L4', name: 'Profit Highway', topic: 'Income Statement and COGS', goal: 'Steer into the right lane and build the Income Statement.', place: 'The highway' },
   { n: 5, key: 'L5', name: 'Cash Flow Shooting Gallery', topic: 'Statement of Cash Flows', goal: 'Shoot each cash-flow target with the right gun: Operating, Investing or Financing, then Add back or Deduct.', place: 'The fairground' },
-  { n: 6, key: 'L6', name: 'Ratio Supermarket', topic: 'Ratio analysis', goal: 'Shop for the numerator and denominator, compute the ratio, then give the analyst’s verdict.', place: 'The supermarket' },
+  { n: 6, key: 'L6', name: 'Ratio Supermarket', topic: 'Ratio analysis', goal: 'Shop for the numerator and denominator, compute the ratio, then fire news headlines at the right company.', place: 'The supermarket' },
 ];
 
 export const POWERUPS = [

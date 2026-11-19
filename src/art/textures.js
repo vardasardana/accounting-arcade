@@ -29,12 +29,13 @@ export async function buildTextures(game) {
     ['sc_pillar', sp.pillar], ['sc_beam', sp.beam], ['sc_pan_l', sp.pan(470)], ['sc_pan_r', sp.pan(470)], ['sc_dial', sp.dial],
     ['crate', A.crate(280, 132)], ['pusher', A.pusher()],
     ['car', A.raceCar()], ['tree', A.tree()], ['truck', A.rival('truck')], ['scooter', A.rival('scooter')], ['camper', A.rival('camper')], ['coffee', A.coffeeStop()],
-        ['bg_fair', A.bgFair()], ['target', A.woodTarget()], ['crosshair', A.crosshair()], ['bg_market', A.bgMarket()], ['trolley', A.trolley()], ['jarglass', A.glassJar()],
+        ['bg_fair', A.bgFair()], ['target', A.woodTarget()], ['crosshair', A.crosshair()], ['bg_market', A.bgMarket()], ['trolley', A.trolley()], ['bg_sling', A.bgSling()], ['slingshot', A.slingshot()], ['newspaper', A.newspaper()], ['block', A.block()], ['jarglass', A.glassJar()],
     ['coin', ICON.coin(28)],
   ];
   ['smile', 'wink', 'eyebrow', 'cheer'].forEach((e) => list.push(['penny_' + e, penny(e, 200)]));
   for (let i = 0; i < 8; i++) list.push(['avatar_' + i, avatar(i, 120)]);
   SLOT.forEach((s, i) => { list.push(['basket_' + i, basket(190, 104, s.color, s.pat)]); list.push(['basket_' + i + '_h', basket(190, 104, s.color, s.pat, true)]); });
+  ['#0072B2', '#CC79A7', '#E69F00', '#009E73', '#D55E00', '#56B4E9'].forEach((c) => { list.push(['ceo_' + c.slice(1), A.ceo(c)]); list.push(['hat_' + c.slice(1), A.topHat(c)]); });
   CONCEPT_ICONS.forEach((k) => list.push(['ci_' + k, conceptIcon(k, 40)]));
   CRATE_ICONS.forEach((k) => list.push(['cr_' + k, crateIcon(k, 46)]));
   await Promise.all(list.map(([k, s]) => addSvg(game, k, s)));

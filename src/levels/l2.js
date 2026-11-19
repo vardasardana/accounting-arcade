@@ -13,19 +13,19 @@ export class Level2 extends LevelBase {
   constructor() { super('L2', 2); }
   introLines() {
     return [
-      'Each slip is one transaction of <b>Copperleaf Coffee Ltd</b>. Show its effect on the equation.',
+      'Each slip is one transaction of <b>Brightwave Appliances Ltd</b>, a maker of home appliances. Show its effect on the equation.',
       'Drag each weight onto the right jar (or tap a weight, then tap a jar). Some weights are decoys.',
       'Keyboard: <span class="kbd">←</span><span class="kbd">→</span> pick a weight, <span class="kbd">↑</span><span class="kbd">↓</span> pick a jar, <span class="kbd">Enter</span> drops it.',
       'Press <b>WEIGH!</b> (<span class="kbd">W</span>) when done. <span class="kbd">Backspace</span> undoes the last weight.',
     ];
   }
-  introRule() { return 'Assets = Liabilities + Equity. Revenue raises equity; expenses and share buybacks lower it.'; }
+  introRule() { return 'Assets = Liabilities + Equity.'; }
   buildWorld() {
     bg(this, 'bg_roastery');
     this.items = S.data.l2.slice().sort((a, b) => a.wave - b.wave || a.id.localeCompare(b.id));
     // jars from data, in first-appearance order per side
     const seen = new Map();
-    for (const it of this.items) for (const e of it.effects) if (!seen.has(e.item)) seen.set(e.item, e.side);
+    for (const it of this.items) for (const e of it.effects) for (const n of e.alts || [e.item]) if (!seen.has(n)) seen.set(n, e.side);
     const sides = { Assets: [], Liabilities: [], Equity: [] };
     for (const [name, side] of seen) sides[side].push(name);
     this.bal = Object.fromEntries([...seen.keys()].map((k) => [k, 0]));
@@ -92,7 +92,7 @@ export class Level2 extends LevelBase {
       const waves = [...new Set(this.items.map((i) => i.wave))];
       this.setStageDots(waves.indexOf(it.wave) + 1, waves.length, 'Wave');
       if (it.wave === waves[waves.length - 1]) musicTempo(1.1);
-      this.banner(`Wave ${it.wave}: ${names[it.wave] || ''}`, 'Copperleaf Coffee Ltd keeps growing. Keep the scale level!', 2.8, () => this.showSlip(it));
+      this.banner(`Wave ${it.wave}: ${names[it.wave] || ''}`, 'Brightwave Appliances Ltd keeps growing. Keep the scale level!', 2.8, () => this.showSlip(it));
       return;
     }
     this.showSlip(it);
@@ -100,7 +100,7 @@ export class Level2 extends LevelBase {
   showSlip(it) {
     this.cur = it; this.peekItem = null; sfx('rustle');
     $(this.ui, '.tx').textContent = it.prompt;
-    this.setPreviewKey(it.effects.map((e) => `${e.item} ${fmtSigned(e.change)}`).join('; '));
+    this.setPreviewKey(it.effects.map((e) => `${(e.alts || [e.item]).join('/')} ${fmtSigned(e.change)}`).join('; '));
     const per = S.config.levels['2'].time_per_wave_s; const t = per[Math.min(per.length - 1, it.wave - 1)] || 40;
     this.timeTotal = this.T(t); this.timeLeft = this.timeTotal; this.startDelay = 1.5; this.slipStart = this.time.now;
     const ws = [...it.effects.map((e) => e.change), ...it.decoys.map((d) => d.change)];
@@ -171,7 +171,7 @@ export class Level2 extends LevelBase {
   }
   currentItem() { return this.cur; }
   applyPeek(it) {
-    const names = new Set(it.effects.map((e) => e.item));
+    const names = new Set(it.effects.flatMap((e) => e.alts || [e.item]));
     this.jars.forEach((j) => j.ring.setVisible(names.has(j.name)));
     const cnt = { Assets: 0, Liabilities: 0, Equity: 0 }; it.effects.forEach((e) => cnt[e.side]++);
     const word = (n, s, p) => (n === 1 ? 'one ' + s : n === 2 ? 'two ' + p : n + ' ' + p);
@@ -204,18 +204,27 @@ export class Level2 extends LevelBase {
     if (this.frozen || !this.cur || this.judging) return;
     if (!timeout && !this.placed.length) { this.floatText(1168, 470, 'Place a weight first', 'lbl'); return; }
     const it = this.cur; this.judging = true;
-    const p = this.pending();
+    const raw = this.pending();
+    // A money effect may go to either the Cash or the Bank jar: map what the student used onto the expected jar.
+    const resolved = it.effects.map((e) => e.item);
+    const p = { ...raw };
+    it.effects.forEach((e, i) => {
+      if (!e.alts || e.alts.length < 2) return;
+      const wantedElsewhere = (n) => it.effects.some((f, k) => k !== i && f.item === n);
+      const alt = e.alts.find((n) => n !== e.item && !wantedElsewhere(n) && (p[n] || 0) === e.change && (p[e.item] || 0) !== e.change);
+      if (alt) { p[e.item] = (p[e.item] || 0) + p[alt]; delete p[alt]; resolved[i] = alt; }
+    });
     const want = {}; it.effects.forEach((e) => (want[e.item] = (want[e.item] || 0) + e.change));
     const keys = new Set([...Object.keys(p), ...Object.keys(want)]);
     const itemsOk = [...keys].every((k) => (p[k] || 0) === (want[k] || 0)) && this.placed.length === it.effects.length;
-    let a = 0, le = 0; for (const [k, v] of Object.entries(p)) { if (this.sideOf[k] === 'Assets') a += v; else le += v; }
+    let a = 0, le = 0; for (const [k, v] of Object.entries(raw)) { if (this.sideOf[k] === 'Assets') a += v; else le += v; }
     const balanced = a === le && this.placed.length > 0;
     const fast = (this.timeTotal - this.timeLeft) < this.timeTotal / 2;
     const rt = Math.round(this.time.now - this.slipStart);
     const given = this.placed.map((w) => `${w.jar.name} ${fmtSigned(w.change)}`).join('; ') || (timeout ? 'time out' : 'nothing');
-    const correctText = it.effects.map((e) => `${e.item === EQ ? 'Equity' : e.item} ${fmtSigned(e.change)}`).join('; ');
+    const correctText = it.effects.map((e) => `${e.item === EQ ? 'Equity' : (e.alts || [e.item]).join(' or ')} ${fmtSigned(e.change)}`).join('; ');
     this.setTimer(null);
-    const apply = () => { it.effects.forEach((e) => (this.bal[e.item] += e.change)); this.placed = []; this.jars.forEach((j) => j.chips.removeAll(true)); this.targetAngle = 0; this.updateLive(); this.updateEquation(); };
+    const apply = () => { it.effects.forEach((e, i) => (this.bal[itemsOk ? resolved[i] : e.item] += e.change)); this.placed = []; this.jars.forEach((j) => j.chips.removeAll(true)); this.targetAngle = 0; this.updateLive(); this.updateEquation(); };
     this.setProgress((this.idx + 1) / this.items.length);
     if (itemsOk) {
       sfx('ting'); this.perfect++;

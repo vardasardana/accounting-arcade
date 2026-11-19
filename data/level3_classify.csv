@@ -1,0 +1,18 @@
+id,wave,subtopic,item,context,icon,correct_4chute,correct_5chute,explanation,difficulty,active
+L3-001,1,PPE,Assembly-line robots,used in production for years,gear,Non-current Asset,Non-current Asset,"PPE held for long-term use in production (depreciated), so a non-current asset.",1,TRUE
+L3-006,1,Inventory,Finished washing machines,in the warehouse awaiting sale,boxes,Current Asset,Current Asset,"Inventory: held for sale within the operating cycle, so a current asset.",1,TRUE
+L3-014,1,Trade payables,Trade payables,owed to parts suppliers,invoice_out,Liability,Current Liability,"Owed to suppliers and payable within 12 months: a liability.",1,TRUE
+L3-020,1,Share capital,Share capital,,certificate,Equity,Equity,"Funds put in by shareholders, the residual owners: equity.",1,TRUE
+L3-003,2,Intangibles,Goodwill,from buying a rival company,handshake,Non-current Asset,Non-current Asset,"An intangible asset: no physical form but gives long-term benefits (tested for impairment).",1,TRUE
+L3-008,2,Prepaid expenses,Insurance paid in advance,covering the next 12 months,calendar_coin,Current Asset,Current Asset,"A prepaid expense: the benefit is used up within the year, so a current asset.",1,TRUE
+L3-022,2,Reserves,Revaluation surplus,on the head-office building,vault,Equity,Equity,"Revaluation surplus is part of equity (other reserves), created when PPE is revalued upwards (IAS 16).",2,TRUE
+L3-015,3,Current liabilities,Bank overdraft,repayable on demand,bank_minus,Liability,Current Liability,"Repayable on demand, so it is a current liability.",1,TRUE
+L3-018,3,Non-current liabilities,Bank term loan,repayable in full in 10 years,bank_long,Liability,Non-current Liability,"Not to be settled within 12 months, so a non-current liability.",1,TRUE
+L3-016,3,Current liabilities,Wages earned by staff,not yet paid at year end,wallet_clock,Liability,Current Liability,"An accrued expense due within weeks: a current liability.",1,TRUE
+L3-011,4,Intention,Bicycles,held for sale by a bike shop,bicycle,Current Asset,Current Asset,"Held for sale in the normal course of business, so inventory: a current asset.",2,TRUE
+L3-012,4,Intention,Delivery bicycles,used by a courier company,bicycle,Non-current Asset,Non-current Asset,"Held for use, not for sale, so PPE: intention decides the class.",2,TRUE
+L3-010,4,Cash equivalents,Government bills,maturing within 3 months of purchase,cash,Current Asset,Current Asset,"A cash equivalent: short maturity and insignificant risk of change in value.",2,TRUE
+L3-024,5,Not recorded,Lawsuit from a former supplier,loss possible but not probable,gavel,,Notes only / Not recorded,"A contingent liability: disclosed in the notes, not recorded (IAS 37).",2,TRUE
+L3-026,5,Not recorded,A director's holiday home,owned personally by the director,house,,Notes only / Not recorded,"Entity Concept: a director's personal asset is not the company's asset.",2,TRUE
+L3-019,5,Non-current liabilities,Bonds issued,repayable in 8 years,scroll,Liability,Non-current Liability,"Long-term borrowing not due within 12 months: a non-current liability.",1,TRUE
+L3-004,5,Intangibles,Patent,on a quiet-motor design,patent,Non-current Asset,Non-current Asset,"An intangible asset: a legal right that gives benefits for many years.",1,TRUE

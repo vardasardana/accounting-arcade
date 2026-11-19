@@ -1,0 +1,41 @@
+{
+  "title": "The Accounting Arcade",
+  "instructor_pin": "2468",
+  "LEADERBOARD_URL": "",
+  "class_code": "ACCT-TRIAL",
+  "student_id_enabled": false,
+  "default_speed": "standard",
+  "speed_locked": false,
+  "explanation_auto_close_s": 12,
+  "shop_timer_s": 0,
+  "wrong_answer_penalty": 0,
+  "starting_hearts": 3,
+  "max_hearts": 4,
+  "free_starting_power_up": "peek",
+  "scoring": {
+    "base": 10,
+    "speed_bonus": 5,
+    "trap_bonus": 5,
+    "level_complete": 50,
+    "per_star": 25,
+    "let_fall_stage_a": 2,
+    "three_weight_base": 15,
+    "pick_figures_base": 15,
+    "verdict_base": 10,
+    "streak_steps": [[0, 1], [3, 1.5], [6, 2], [10, 3]],
+    "multiplier_cap": 4
+  },
+  "shop": {
+    "peek": 40, "slow": 60, "shield": 80, "heart": 120, "double": 100,
+    "max_each": 2, "slow_seconds": 10, "double_count": 5
+  },
+  "speeds": { "relaxed": 0.7, "standard": 1.0, "fast": 1.2 },
+  "levels": {
+    "1": { "read_pause_s": 2.5, "gap_s": 1.5 },
+    "2": { "time_per_wave_s": [50, 48, 45, 42, 40] },
+    "3": { "belt_time_s": [12, 11.5, 11, 10.5, 10] },
+    "4": { "warning_s": [11, 10.5, 10, 9.5] },
+    "5": { "fall_time_s": { "A1": 10, "A2": 10, "A3": 10, "B": 9.5, "C": 9.5, "D": 9.5 }, "cards": { "A1": 3, "A2": 3, "A3": 3, "B": 4, "C": 4, "D": 4 }, "stage_d_enabled": true },
+    "6": { "set_time_s": [16, 15, 15, 14, 16], "pick_time_s": 35, "judge_time_s": 14 }
+  }
+}

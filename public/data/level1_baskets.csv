@@ -1,0 +1,14 @@
+name,short,idea,icon
+Entity Concept,Entity,The business is separate from its owners.,entity
+Going Concern Concept,Going Concern,Assume the business keeps running.,goingconcern
+Accounting Period (Periodicity) Concept,Accounting Period,Profit is measured in regular periods.,period
+Money Measurement Concept,Money Measurement,Record only what can be measured in money.,money
+Historical Cost Concept,Historical Cost,Record assets at what they cost.,histcost
+Consistency Concept,Consistency,Keep the same methods year to year.,consistency
+Accrual (Revenue Recognition) Concept,Accrual (Revenue Recognition),"Record revenue when earned, not when cash arrives.",accrual
+Matching Concept,Matching,Expenses go with the revenue they helped earn.,matching
+Dual Aspect Concept,Dual Aspect,Every transaction has two equal sides.,dual
+Conservatism (Prudence),Conservatism (Prudence),"Recognise likely losses, not hoped-for gains.",prudence
+Materiality,Materiality,Small items need no special treatment.,materiality
+Full Disclosure,Full Disclosure,Share all material information in the notes.,disclosure
+Objectivity,Objectivity,"Use verifiable evidence, not opinion.",objectivity

@@ -147,7 +147,7 @@ export class LevelBase extends Phaser.Scene {
     if (this.doubleLeft > 0) { mult *= 2; this.doubleLeft--; }
     mult = Math.min(mult, sc.multiplier_cap || 4);
     const pre = (base ?? sc.base) + (fast ? sc.speed_bonus : 0) + (trap ? sc.trap_bonus : 0);
-    const coins = Math.ceil(pre * mult);
+    const coins = Math.ceil(pre * mult * (S.config.levels?.[String(this.n)]?.coin_scale ?? 1));
     this.addCoins(coins);
     this.st.correct++; this.st.attempted++;
     if (rt !== undefined && (this.st.fastest === null || rt < this.st.fastest)) this.st.fastest = rt;
@@ -166,7 +166,7 @@ export class LevelBase extends Phaser.Scene {
     this.addCoins(c); this.log(item, 'let fall', true, { counted: false, correct: 'let fall' });
     this.floatText(x, y, '+' + c); this.refreshHud();
   }
-  addCoins(c) { S.run.wallet += c; S.run.total += c; this.st.coins += c; }
+  addCoins(c) { const cap = S.config.wallet_cap || 0; S.run.wallet = cap ? Math.min(cap, S.run.wallet + c) : S.run.wallet + c; S.run.total += c; this.st.coins += c; }
   /** wrong answer: logs, costs a heart (unless shield), then shows the explanation; calls after() when play resumes */
   markWrong({ item, given, correctText, explanation, rt, after, prompt }) {
     this.st.attempted++;

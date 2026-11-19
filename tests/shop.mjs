@@ -1,0 +1,10 @@
+import { chromium } from 'playwright-core';
+const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome' });
+const p = await b.newPage({ viewport: { width: 1280, height: 720 } }); const errs = []; p.on('pageerror', (e) => errs.push(e.message));
+await p.goto('http://localhost:4173/');
+await p.waitForFunction(() => window.__AA && document.querySelector('#ui .play'), null, { timeout: 30000 });
+await p.evaluate(() => { const { S, game } = window.__AA; S.player = { name: 'Varda', avatar: 3 }; S.run = { mode: 'class', wallet: 240, total: 240, levels: {}, log: [], inventory: { peek: 1, slow: 0, shield: 0, double: 0, heart: 0 }, bestStreak: 0, start: Date.now(), end: null, speed: 'standard' }; game.scene.getScenes(true).forEach((s) => s.scene.stop()); game.scene.start('Shop', { next: 2 }); });
+await p.waitForTimeout(1500); await p.click('#ui .shopjar[data-k="slow"]'); await p.waitForTimeout(300); await p.click('#ui .shopjar[data-k="slow"]'); await p.click('#ui .shopjar[data-k="peek"]'); await p.waitForTimeout(500);
+await p.screenshot({ path: 'shots/20_shop.png' });
+console.log('wallet', await p.evaluate(() => window.__AA.S.run.wallet), 'inv', await p.evaluate(() => JSON.stringify(window.__AA.S.run.inventory)), errs);
+await b.close();

@@ -1,6 +1,3 @@
 wave,name,baskets,cards,fall_time_s,max_on_screen
-1,Basics,Entity Concept|Money Measurement Concept|Going Concern Concept,3,11,1
-2,Records and Rules,Historical Cost Concept|Consistency Concept|Materiality,3,10.5,1
-3,Timing,Accrual (Revenue Recognition) Concept|Accounting Period (Periodicity) Concept|Dual Aspect Concept,3,10,1
-4,Caution and Evidence,Matching Concept|Conservatism (Prudence)|Full Disclosure|Objectivity,4,10,1
-5,Audit Finale,RANDOM,4,9.5,1
+1,Warm-up audit,RANDOM,5,11,1
+2,Full audit,RANDOM,5,10.5,1

@@ -13,7 +13,7 @@ export const TOPICS = {
 export const FILES = {
   l1: 'level1_concepts.csv', l1w: 'level1_waves.csv', l1b: 'level1_baskets.csv',
   l2: 'level2_equation.csv', l3: 'level3_classify.csv', l4: 'level4_profit.csv',
-  l5: 'level5_cashflow.csv', l6: 'level6_ratios.csv', l6x: 'level6_extracts.json',
+  l5: 'level5_targets.csv', l6s: 'level6_shelf.csv', l6: 'level6_ratios.csv', l6v: 'level6_verdicts.csv',
 };
 
 export const CHUTES = ['Non-current Asset', 'Current Asset', 'Liability', 'Current Liability', 'Non-current Liability', 'Equity', 'Notes only / Not recorded'];
@@ -155,50 +155,63 @@ export async function loadAll() {
     l4.push({ id, level: 4, topic: TOPICS[4], stage: num(r.stage), checkpoint: (r.checkpoint || '').trim(), subtopic: (r.subtopic || r.checkpoint || '').trim(), prompt: r.prompt.trim(), options, correct: ci, receipt: labels.map((l, k) => ({ label: l, amount: amounts[k] })), hint: (r.formula_hint || '').trim(), explanation: r.explanation.trim(), difficulty: num(r.difficulty) || 1 });
   });
 
-  // ---------- Level 5 ----------
+  // ---------- Level 5: Cash Flow Shooting Gallery ----------
   const l5 = [];
+  const L5_ANS = { A: CF.slice(0, 3), B: CF.slice(0, 3), C: ['Add back', 'Deduct'] };
   parseCsv(raw.l5.text).forEach((r, i) => {
     const row = i + 2, id = (r.id || '').trim();
     if (!truthy(r.active ?? 'TRUE')) return;
-    if (!req(FILES.l5, row, id, r, ['id', 'stages', 'text', 'correct', 'explanation'])) return;
-    const correct = r.correct.trim(); const trap = truthy(r.is_trap);
-    if (!CF.includes(correct)) { add(FILES.l5, row, id, 'correct must be Operating, Investing, Financing or None'); return; }
-    if (trap !== (correct === 'None')) { add(FILES.l5, row, id, 'Trap cards must have correct = None (and only traps)'); return; }
-    const stages = list(r.stages);
-    if (stages.some((s) => !['A1', 'A2', 'A3', 'B', 'C', 'D'].includes(s))) { add(FILES.l5, row, id, 'Unknown stage (use A1, A2, A3, B, C, D)'); return; }
-    if (trap && stages.some((s) => s !== 'C')) { add(FILES.l5, row, id, 'Trap cards may only appear in Stage C'); return; }
+    if (!req(FILES.l5, row, id, r, ['id', 'stage', 'text', 'correct', 'explanation'])) return;
+    const stage = r.stage.trim().toUpperCase();
+    if (!L5_ANS[stage]) { add(FILES.l5, row, id, `stage "${r.stage}" must be A, B or C`); return; }
+    const correct = r.correct.trim();
+    if (!L5_ANS[stage].includes(correct)) { add(FILES.l5, row, id, `correct "${correct}" must be one of: ${L5_ANS[stage].join(', ')} for stage ${stage}`); return; }
     if (!uniq(FILES.l5, row, id)) return;
     lenWarn(FILES.l5, row, id, r.text);
-    l5.push({ id, level: 5, topic: TOPICS[5], stages, subtopic: (r.subtopic || '').trim(), text: r.text.trim(), correct, trap, explanation: r.explanation.trim(), difficulty: num(r.difficulty) || 1 });
+    l5.push({ id, level: 5, topic: TOPICS[5], stage, subtopic: (r.subtopic || '').trim(), text: r.text.trim(), correct, explanation: r.explanation.trim(), difficulty: num(r.difficulty) || 1 });
   });
 
-  // ---------- Level 6 ----------
+  // ---------- Level 6: Ratio Supermarket + Analyst's Verdict ----------
+  const shelf = [];
+  parseCsv(raw.l6s.text).forEach((r, i) => {
+    const row = i + 2, id = (r.id || '').trim();
+    if (!req(FILES.l6s, row, id, r, ['id', 'label', 'amount'])) return;
+    const amount = num(r.amount);
+    if (!Number.isFinite(amount)) { add(FILES.l6s, row, id, 'amount must be a number'); return; }
+    if (shelf.some((x) => x.id === id)) { add(FILES.l6s, row, id, 'Duplicate shelf id'); return; }
+    shelf.push({ id, label: r.label.trim(), amount, statement: (r.statement || '').trim() });
+  });
+  const shelfIds = new Set(shelf.map((x) => x.id));
   const l6 = [];
   parseCsv(raw.l6.text).forEach((r, i) => {
     const row = i + 2, id = (r.id || '').trim();
     if (!truthy(r.active ?? 'TRUE')) return;
-    if (!req(FILES.l6, row, id, r, ['id', 'round', 'ratio', 'industry', 'companies', 'values', 'weaker_index', 'explanation'])) return;
-    const companies = list(r.companies), values = list(r.values), wi = num(r.weaker_index);
-    if (companies.length !== values.length || companies.length < 2 || companies.length > 3) { add(FILES.l6, row, id, 'Need 2 or 3 companies with one value each'); return; }
-    if (!Number.isInteger(wi) || wi < 0 || wi >= companies.length) { add(FILES.l6, row, id, 'weaker_index is not valid'); return; }
-    if (list(r.industry).length !== 1) { add(FILES.l6, row, id, 'All cards in a set must share one industry'); return; }
+    if (!req(FILES.l6, row, id, r, ['id', 'ratio', 'numerator', 'denominator', 'formula', 'distractors', 'explanation'])) return;
+    const n = r.numerator.trim(), d = r.denominator.trim();
+    if (!shelfIds.has(n) || !shelfIds.has(d)) { add(FILES.l6, row, id, 'numerator and denominator must be ids from ' + FILES.l6s); return; }
+    if (n === d) { add(FILES.l6, row, id, 'numerator and denominator must differ'); return; }
+    const pct = (r.unit || '').trim() === '%', dec = Number.isFinite(num(r.decimals)) ? num(r.decimals) : 2;
+    const val = shelf.find((x) => x.id === n).amount / shelf.find((x) => x.id === d).amount * (pct ? 100 : 1);
+    const answer = val.toFixed(dec);
+    const dis = list(r.distractors).map((x) => num(x));
+    if (dis.length !== 3 || dis.some((x) => !Number.isFinite(x))) { add(FILES.l6, row, id, 'distractors must be exactly three numbers separated by |'); return; }
+    const opts = [answer, ...dis.map((x) => x.toFixed(dec))];
+    if (new Set(opts).size !== 4) { add(FILES.l6, row, id, `Options are not all different (correct answer is ${answer})`); return; }
     if (!uniq(FILES.l6, row, id)) return;
-    l6.push({ id, level: 6, topic: TOPICS[6], type: 'compare', round: num(r.round), subtopic: (r.subtopic || '').trim(), ratio: r.ratio.trim(), formula: (r.formula || '').trim(), industry: r.industry.trim(), cards: companies.map((c, k) => ({ company: c, value: values[k] })), weaker: wi, better: (r.better || '').trim(), explanation: r.explanation.trim(), difficulty: num(r.difficulty) || 1 });
+    l6.push({ id, level: 6, topic: TOPICS[6], subtopic: (r.family || '').trim() || 'Ratios', ratio: r.ratio.trim(), numerator: n, denominator: d, formula: r.formula.trim(), unit: pct ? '%' : (r.unit || '').trim(), answer, options: opts, explanation: r.explanation.trim(), difficulty: num(r.difficulty) || 1 });
   });
-  const l6x = [];
-  let extracts = [];
-  try { extracts = raw.l6x.text ? JSON.parse(raw.l6x.text) : []; } catch (e) { add(FILES.l6x, '-', '', 'JSON could not be parsed: ' + e.message); }
-  (Array.isArray(extracts) ? extracts : []).forEach((x, i) => {
-    const row = 'item ' + (i + 1), id = x.id;
-    if (x.active === false) return;
-    if (!id || !x.ratio || !Array.isArray(x.lines)) { add(FILES.l6x, row, id, 'Missing id, ratio or lines'); return; }
-    const needed = x.lines.filter((l) => l.needed).length, decoys = x.lines.length - needed;
-    if (needed < 2 || decoys < 2) { add(FILES.l6x, row, id, 'Needs at least two needed lines and two decoys'); return; }
-    if (x.verdict && !['Strength', 'Red Flag'].includes(x.verdict)) { add(FILES.l6x, row, id, 'verdict must be Strength, Red Flag or blank'); return; }
-    if (!uniq(FILES.l6x, row, id)) return;
-    l6x.push({ ...x, topic: TOPICS[6], subtopic: x.subtopic || 'Pick the right figures', difficulty: x.difficulty || 2 });
+  const l6v = [];
+  const VERD = ['Healthy', 'Too low', 'Too high'];
+  parseCsv(raw.l6v.text).forEach((r, i) => {
+    const row = i + 2, id = (r.id || '').trim();
+    if (!truthy(r.active ?? 'TRUE')) return;
+    if (!req(FILES.l6v, row, id, r, ['id', 'ratio', 'company_value', 'industry_value', 'correct', 'explanation'])) return;
+    const correct = r.correct.trim();
+    if (!VERD.includes(correct)) { add(FILES.l6v, row, id, 'correct must be Healthy, Too low or Too high'); return; }
+    if (!uniq(FILES.l6v, row, id)) return;
+    l6v.push({ id, level: 6, topic: TOPICS[6], subtopic: 'Verdict', period: (r.period || '').trim(), ratio: r.ratio.trim(), company: r.company_value.trim(), industry: r.industry_value.trim(), correct, explanation: r.explanation.trim(), difficulty: num(r.difficulty) || 1 });
   });
 
   return { config, report, overrides: Object.entries(raw).filter(([, v]) => v.override).map(([k]) => FILES[k]),
-    data: { baskets, waves1, l1, l2, l3, l4, l5, l6, l6x } };
+    data: { baskets, waves1, l1, l2, l3, l4, l5, shelf, l6, l6v } };
 }

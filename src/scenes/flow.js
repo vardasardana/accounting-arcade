@@ -27,8 +27,8 @@ function extraTile(res) {
     case 2: return { b: x.perfect ? 'Perfect!' : 'Balanced', s: x.equation || '' };
     case 3: return { b: res.fastest ? (res.fastest / 1000).toFixed(1) + 's' : '–', s: 'Fastest correct crate' };
     case 4: { const r = x.receipt || []; const np = r.find((l) => /net profit/i.test(l.label)); return { b: np ? np.amount : r.length + ' lines', s: np ? 'Net profit on your receipt' : 'Income Statement lines built' }; }
-    case 5: return { b: `${x.cfo || 0}/${x.cfi || 0}/${x.cff || 0}`, s: `Operating / Investing / Financing caught · ${x.traps || 0} traps avoided` };
-    case 6: { const t = x.themes || {}; const k = Object.keys(t); return { b: k.length ? k.filter((q) => t[q].c === t[q].n).length + '/' + k.length : '–', s: 'Ratio families all correct' }; }
+    case 5: return { b: `${x.cfo || 0}/${x.cfi || 0}/${x.cff || 0}`, s: `Operating / Investing / Financing hits · ${x.adj || 0} adjustments · ${x.missed || 0} missed` };
+    case 6: { const t = x.themes || {}; const k = Object.keys(t); return { b: k.length ? k.filter((q) => t[q].c === t[q].n).length + '/' + k.length : '–', s: 'Ratio families and verdicts all correct' }; }
     default: return { b: '', s: '' };
   }
 }
@@ -79,7 +79,7 @@ export class ShopScene extends Phaser.Scene {
   constructor() { super('Shop'); }
   create(data) {
     UI.clear(); fadeIn(this); bg(this, 'bg_shop'); playMusic('shop');
-    const next = data.next, lv = LEVELS[next - 1], price = S.config.shop, max = price.max_each || 2;
+    const next = data.next, lv = LEVELS[next - 1], price = S.config.shop, capOf = (k) => price.max_per_visit?.[k] ?? price.max_each ?? 1;
     const bought = {};
     const jarUri = uri(glassJar());
     const el = UI.add(`<div class="screen">
@@ -92,18 +92,18 @@ export class ShopScene extends Phaser.Scene {
         <div class="jarimg"><img class="j" alt="" src="${jarUri}"><img class="i" alt="" src="${iconUri(p.icon, 64)}"></div>
         <div style="font-family:var(--hd);font-weight:700;color:var(--navy);font-size:19px;background:rgba(255,255,255,.85);border-radius:8px">${p.name}</div>
         <div class="owned" style="background:rgba(255,255,255,.85);border-radius:8px;padding:2px 4px">${esc(p.desc)}</div>
-        <div style="margin-top:4px"><span class="price"><img alt="" src="${iconUri('coin', 18)}" width="18">${price[p.key]}</span> <span class="owned own" style="background:#fff;border-radius:8px;padding:0 6px"></span></div></div>`).join('')}
-      <div style="position:absolute;left:30px;bottom:20px" class="muted"><span style="background:rgba(255,255,255,.9);padding:4px 10px;border-radius:10px">Buy up to ${max} of each. Keys <span class="kbd">1</span>–<span class="kbd">5</span> buy, <span class="kbd">Enter</span> continues.</span></div>
+        <div style="margin-top:4px"><span class="price"><img alt="" src="${iconUri('coin', 18)}" width="18">${price[p.key]}</span> <div><span class="owned own" style="background:#fff;border-radius:8px;padding:0 6px;white-space:nowrap"></span></div></div></div>`).join('')}
+      <div style="position:absolute;left:30px;bottom:20px" class="muted"><span style="background:rgba(255,255,255,.9);padding:4px 10px;border-radius:10px">Choose wisely: limits per visit are on each jar.${S.config.wallet_cap ? ` Your purse holds up to ${S.config.wallet_cap} coins.` : ''} Keys <span class="kbd">1</span>–<span class="kbd">5</span> buy.</span></div>
       <button class="btn big green go" style="position:absolute;left:30px;bottom:70px">Continue to Level ${next} ▶</button></div>`);
     const refresh = () => {
       $(el, '.wallet').textContent = S.run.wallet;
       el.querySelectorAll('.shopjar').forEach((j) => {
-        const k = j.dataset.k, can = S.run.wallet >= price[k] && (bought[k] || 0) < max;
-        j.style.opacity = can ? 1 : 0.6; $(j, '.own').textContent = `You have ${S.run.inventory[k]}`;
+        const k = j.dataset.k, can = S.run.wallet >= price[k] && (bought[k] || 0) < capOf(k);
+        j.style.opacity = can ? 1 : 0.6; $(j, '.own').textContent = `Have ${S.run.inventory[k]} · ${(bought[k] || 0) >= capOf(k) ? 'limit reached' : 'max ' + capOf(k) + ' now'}`;
       });
     };
     const buy = (k, j) => {
-      if ((bought[k] || 0) >= max) { sfx('bonk'); UI.announce('You can buy at most ' + max); return; }
+      if ((bought[k] || 0) >= capOf(k)) { sfx('bonk'); UI.announce('Limit reached: at most ' + capOf(k) + ' per visit'); j.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'none' }], 250); return; }
       if (S.run.wallet < price[k]) { sfx('bonk'); j.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'none' }], 250); UI.announce('Not enough coins'); return; }
       S.run.wallet -= price[k]; S.run.inventory[k]++; bought[k] = (bought[k] || 0) + 1; sfx('kaching');
       UI.announce('Bought ' + k); refresh();

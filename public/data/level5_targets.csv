@@ -1,0 +1,33 @@
+id,stage,subtopic,text,correct,explanation,difficulty,active
+L5-A01,A,Operating,"Cash received from café customers for coffee sold, $12 million",Operating,Cash from selling the company's main products is the core of operating activities.,1,TRUE
+L5-A02,A,Operating,"Cash paid to coffee-bean suppliers, $5 million",Operating,Paying suppliers for inventory is part of the main trading activity: operating.,1,TRUE
+L5-A03,A,Operating,"Salaries paid to baristas, $3 million",Operating,Paying employees who run the cafés is an operating cash outflow.,1,TRUE
+L5-A04,A,Operating,"Electricity bills paid for the roastery, $0.4 million",Operating,Day-to-day running costs of the business are operating cash outflows.,1,TRUE
+L5-A05,A,Investing,"Cash paid for a new roasting machine, $4 million",Investing,"Buying property, plant and equipment (a long-term asset) is an investing cash outflow.",1,TRUE
+L5-A06,A,Investing,"Cash received from selling an old delivery van, $0.2 million",Investing,"Selling property, plant and equipment is an investing cash inflow.",1,TRUE
+L5-A07,A,Investing,"Shares of another company bought as a long-term investment, $2 million",Investing,Buying long-term investments in other entities is an investing activity.,1,TRUE
+L5-A08,A,Financing,"Cash received from a fresh issue of equity shares, $10 million",Financing,Raising money from shareholders changes shareholders' funds: financing.,1,TRUE
+L5-A09,A,Financing,"Five-year bank loan received, $6 million",Financing,Raising borrowings changes the company's debt: financing.,1,TRUE
+L5-A10,A,Financing,"Repayment of a bank loan, $1.5 million",Financing,Repaying borrowings is a financing cash outflow.,1,TRUE
+L5-B01,B,Interest,"Interest paid on the bank loan, $0.6 million",Financing,"Ind AS 7 (para 33): for a company that is not a financial institution, interest paid is a financing activity.",1,TRUE
+L5-B02,B,Interest,"Interest received on fixed deposits, $0.1 million",Investing,"Ind AS 7 (para 33): for a company that is not a financial institution, interest received is an investing activity.",1,TRUE
+L5-B03,B,Dividends,"Dividend received on shares held as an investment, $0.2 million",Investing,"Ind AS 7 (para 33): for a company that is not a financial institution, dividends received are an investing activity.",1,TRUE
+L5-B04,B,Dividends,"Dividend paid to Copperleaf's shareholders, $1 million",Financing,"Ind AS 7 (para 34): dividends paid are a financing activity, a return to the providers of equity.",1,TRUE
+L5-B05,B,Buyback,"Cash paid to buy back Copperleaf's own equity shares, $2 million",Financing,"A buyback returns cash to shareholders and reduces shareholders' funds: financing (Ind AS 7, para 17).",1,TRUE
+L5-B06,B,Tax,"Income tax paid for the year, $1.2 million",Operating,Ind AS 7 (para 35): income tax paid is an operating activity unless it can be specifically linked to investing or financing. Here it cannot.,1,TRUE
+L5-B07,B,Capital work,"Cash paid to build a new café (capital work-in-progress), $3 million",Investing,"Spending on a long-term asset under construction is purchase of property, plant and equipment: investing.",1,TRUE
+L5-B08,B,Deposits,"Cash put into a three-year fixed deposit with a bank, $1 million",Investing,"A deposit for more than three months is not a cash equivalent, so placing it is an investing activity.",1,TRUE
+L5-B09,B,Operating,"Advance received from a customer for a bulk coffee order, $0.5 million",Operating,"Cash received from customers for the company's products, even in advance, is an operating inflow.",1,TRUE
+L5-B10,B,Investments,"Cash received from selling a long-term investment in shares, $1.5 million",Investing,Selling investments in other entities is an investing cash inflow.,1,TRUE
+L5-C01,C,Non-cash,Depreciation on roasting machines,Add back,"Depreciation reduced profit but used no cash, so it is added back.",1,TRUE
+L5-C02,C,Non-cash,Amortisation of café software,Add back,"Amortisation is a non-cash expense, so it is added back.",1,TRUE
+L5-C03,C,Working capital,Increase in trade receivables,Deduct,"More sales are still unpaid, so less cash came in than the profit shows: deduct the increase.",1,TRUE
+L5-C04,C,Working capital,Decrease in trade receivables,Add back,"Customers paid off old dues, so more cash came in than the profit shows: add the decrease.",1,TRUE
+L5-C05,C,Working capital,Increase in inventory of coffee beans,Deduct,Cash was spent on extra stock that is not yet an expense: deduct the increase.,1,TRUE
+L5-C06,C,Working capital,Decrease in inventory of coffee beans,Add back,"Stock used up was paid for earlier, so the expense used no cash this year: add the decrease.",1,TRUE
+L5-C07,C,Working capital,Increase in trade payables,Add back,"Suppliers are not yet paid for some purchases, so cash stayed in the company: add the increase.",1,TRUE
+L5-C08,C,Working capital,Decrease in trade payables,Deduct,Cash was used to pay off old supplier dues: deduct the decrease.,1,TRUE
+L5-C09,C,Non-operating,Profit on sale of an old delivery van,Deduct,"The sale proceeds are shown under investing, so the profit is removed from operating: deduct it.",1,TRUE
+L5-C10,C,Non-operating,Loss on sale of old café equipment,Add back,"The loss is not an operating cash outflow (the sale is investing), so it is added back.",1,TRUE
+L5-C11,C,Non-operating,Finance costs (interest expense) charged in profit and loss,Add back,"Under Ind AS 7, interest paid is shown under financing, so the expense is added back to profit before tax.",1,TRUE
+L5-C12,C,Non-operating,Interest income on fixed deposits,Deduct,"Under Ind AS 7, interest received is shown under investing, so the income is deducted from profit before tax.",1,TRUE

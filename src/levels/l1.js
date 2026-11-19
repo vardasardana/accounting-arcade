@@ -15,6 +15,7 @@ export class Level1 extends LevelBase {
       'Case files fall from the shelf. Each one shows one accounting concept.',
       'Slide the cart with <span class="kbd">←</span> <span class="kbd">→</span>, the mouse or a finger, so the right basket is under the file.',
       'Or press <span class="kbd">1</span>–<span class="kbd">4</span> (or tap a basket label) and the cart glides there for you.',
+      'The baskets change after every <b>two</b> files, so read the labels each time. Two files in a row can belong in the same basket.',
       'Press <span class="kbd">↓</span> to drop a file faster once you are sure (speed bonus).',
     ];
   }
@@ -25,20 +26,20 @@ export class Level1 extends LevelBase {
     this.add.line(0, 0, 0, CATCH_Y + 70, 1280, CATCH_Y + 70, 0x1F3A5F, 0.35).setOrigin(0, 0).setLineWidth(3);
     this.cart = this.add.container(640, CART_Y).setDepth(20);
     this.cart.add(this.add.image(0, 20, 'cart'));
-    this.avatarImg = this.add.image(-430, -20, 'avatar_' + (S.player?.avatar ?? 0)).setScale(0.8);
+    this.avatarImg = this.add.image(440, -20, 'avatar_' + (S.player?.avatar ?? 0)).setScale(0.8);
     this.cart.add(this.avatarImg);
     this.baskets = []; this.cartX = 640; this.cartTarget = null;
     this.waves = S.data.waves1.slice().sort((a, b) => a.wave - b.wave);
     this.byName = Object.fromEntries(S.data.baskets.map((b) => [b.name, b]));
     this.input.on('pointermove', (p) => { if (!this.frozen && p.y > 380 && (p.isDown || p.pointerType === 'mouse')) this.cartTarget = p.x; });
     this.input.on('pointerdown', (p) => { if (!this.frozen && p.y > 380 && p.y < 560) this.cartTarget = p.x; });
-    this.total = this.waves.reduce((a, w) => a + Math.min(w.cards, w.baskets[0] === 'RANDOM' ? S.data.l1.length : S.data.l1.filter((c) => c.wave === w.wave).length), 0);
+    this.total = this.waves.reduce((a, w) => a + Math.min(w.cards, w.baskets[0] === 'RANDOM' ? (S.data.l1.filter((c) => c.wave === w.wave).length || S.data.l1.length) : S.data.l1.filter((c) => c.wave === w.wave).length), 0);
     this.done = 0;
     this.mastered = {};
     this.tips = { Accrual: 'Remember: revenue is recorded when earned, not when the cash arrives.', Matching: 'Remember: expenses follow the revenue they helped to earn.' };
     this.endLine = 'Audit cleared!';
   }
-  begin() { this.waveIdx = -1; this.nextWave(); }
+  begin() { this.waveIdx = -1; this.usedIds = new Set(); this.nextWave(); }
 
   setBaskets(names) {
     this.baskets.forEach((b) => b.c.destroy());
@@ -70,20 +71,38 @@ export class Level1 extends LevelBase {
     this.cartTarget = x - this.baskets[i].off;
     sfx('click');
   }
+  // Basket sets: a fresh random set of 4 every two files; the files' own baskets are always in the set,
+  // the rest are random (repeats across sets allowed), never a concept that could also fit either file.
   buildRandomSets(cards) {
     const all = S.data.baskets.map((b) => b.name), sets = [];
+    const am = ['Accrual (Revenue Recognition) Concept', 'Matching Concept'];
     for (let k = 0; k < cards.length; k += 2) {
       const pair = cards.slice(k, k + 2);
       const req = [...new Set(pair.map((c) => c.correct))];
       const forbid = new Set(pair.flatMap((c) => c.conflicts));
-      const ok = (n) => !forbid.has(n) && !req.includes(n);
-      const am = ['Accrual (Revenue Recognition) Concept', 'Matching Concept'];
-      let pool = shuffle(all.filter(ok));
       const set = req.slice();
-      for (const n of pool) { if (set.length >= 4) break; if (am.includes(n) && set.some((s) => am.includes(s))) continue; set.push(n); }
+      for (const n of shuffle(all.filter((n) => !forbid.has(n) && !req.includes(n)))) { if (set.length >= 4) break; if (am.includes(n) && set.some((s) => am.includes(s))) continue; set.push(n); }
       sets.push(shuffle(set));
     }
     return sets;
+  }
+  // Draws n files from this round's pool. Pairs share a basket set, so the second file of a pair must not
+  // clash with the first; about half the time it deliberately belongs to the SAME basket as the first.
+  drawCards(pool, n) {
+    const left = shuffle(pool), cards = [];
+    const ok = (a, b) => !a.conflicts.includes(b.correct) && !b.conflicts.includes(a.correct);
+    while (cards.length < n && left.length) {
+      const prev = cards.length % 2 === 1 ? cards[cards.length - 1] : null;
+      let i = -1;
+      if (prev) {
+        if (Math.random() < 0.5) i = left.findIndex((c) => c.correct === prev.correct);
+        if (i < 0) i = left.findIndex((c) => c.correct !== prev.correct && ok(prev, c));
+        if (i < 0) i = left.findIndex((c) => ok(prev, c));
+        if (i < 0) break;
+      } else i = 0;
+      cards.push(left.splice(i, 1)[0]);
+    }
+    return cards;
   }
   nextWave() {
     this.waveIdx++;
@@ -92,9 +111,10 @@ export class Level1 extends LevelBase {
     this.setStageDots(this.waveIdx + 1, this.waves.length, 'Audit round');
     let cards;
     if (w.baskets[0] === 'RANDOM') {
-      const pool = shuffle(S.data.l1);
-      cards = []; const used = new Set();
-      for (const c of pool) { if (cards.length >= w.cards) break; const prev = cards.length % 2 === 1 ? cards[cards.length - 1] : null; if (prev && (prev.correct === c.correct || prev.conflicts.includes(c.correct) || c.conflicts.includes(prev.correct))) continue; if (used.has(c.id)) continue; used.add(c.id); cards.push(c); }
+      const own = S.data.l1.filter((c) => c.wave === w.wave && !this.usedIds.has(c.id));
+      const pool = own.length ? own : S.data.l1.filter((c) => !this.usedIds.has(c.id));
+      cards = this.drawCards(pool, w.cards);
+      cards.forEach((c) => this.usedIds.add(c.id));
       this.sets = this.buildRandomSets(cards);
     } else {
       cards = S.data.l1.filter((c) => c.wave === w.wave).sort((a, b) => a.difficulty - b.difficulty).slice(0, w.cards);
@@ -104,14 +124,14 @@ export class Level1 extends LevelBase {
     }
     this.queue = cards; this.cardIdx = 0; this.wave = w;
     if (this.waveIdx === this.waves.length - 1) musicTempo(1.12);
-    const names = this.sets ? 'Baskets change every two files: read each label!' : w.baskets.map((b) => this.byName[b]?.short || b).join(' · ');
+    const names = this.sets ? 'The baskets on your cart change after every <b>two</b> files. A basket can come back, and two files in a row can belong in the same basket, so read every label!' : w.baskets.map((b) => this.byName[b]?.short || b).join(' · ');
     this.setTheme(`Audit round ${w.wave}: ${w.name}`);
     sfx('ding');
-    this.banner(`Audit round ${w.wave}: ${w.name}`, names, 3.2, () => this.spawn());
+    this.banner(`Audit round ${w.wave}: ${w.name}`, names, 4.2, () => this.spawn());
   }
   spawn() {
     if (this.cardIdx >= this.queue.length) { this.wait(0.6, () => this.nextWave()); return; }
-    if (this.sets && this.cardIdx % 2 === 0) this.setBaskets(this.sets[Math.floor(this.cardIdx / 2)]);
+    if (this.sets && this.cardIdx % 2 === 0) { this.setBaskets(this.sets[Math.floor(this.cardIdx / 2)]); if (this.cardIdx > 0) { sfx('whoosh'); this.floatText(640, 470, '🔄 New baskets!', 'lbl'); this.basketChanges = (this.basketChanges || 0) + 1; } }
     const item = this.queue[this.cardIdx++];
     const col = COLS[Math.floor(Math.random() * 3)];
     const c = this.add.container(col, TOP_Y).setDepth(30);

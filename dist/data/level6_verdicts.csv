@@ -1,0 +1,7 @@
+id,period,ratio,company_value,industry_value,correct,explanation,difficulty,active
+L6-V01,FY 2025-26 (this year),Current ratio,1.5 times,1.4 times,Healthy,Copperleaf's current ratio of 1.5 is close to the industry's 1.4. Short-term assets cover short-term obligations comfortably without too much money sitting idle.,1,TRUE
+L6-V02,FY 2021-22,Current ratio,5.0 times,1.5 times,Too high,"Higher is not always better. A current ratio of 5 against 1.5 means cash, receivables or stock are piling up unused: idle funds that earn nothing.",1,TRUE
+L6-V03,FY 2022-23,Debt-equity ratio,0.02,0.80,Too low,"Lower is not always better. With almost no debt, Copperleaf is not using borrowings, which are usually cheaper than equity because interest is tax-deductible. Shareholders' returns could be higher.",1,TRUE
+L6-V04,FY 2023-24,Inventory turnover ratio,40 times,8 times,Too high,"Higher is not always better. Turning stock 40 times against 8 suggests Copperleaf holds very little stock, so cafés risk running out of beans and losing sales.",1,TRUE
+L6-V05,FY 2024-25,Trade receivables collection period,75 days,30 days,Too high,"Customers take 75 days to pay against an industry norm of 30. Cash is stuck with customers, and some dues may turn bad.",1,TRUE
+L6-V06,FY 2020-21,Interest coverage ratio,1.2 times,6 times,Too low,EBIT covers interest only 1.2 times against 6 for the industry. A small fall in profit could leave Copperleaf unable to pay interest.,1,TRUE

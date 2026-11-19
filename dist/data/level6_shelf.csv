@@ -1,0 +1,16 @@
+id,label,amount,statement
+REV,Revenue from operations,200,Statement of Profit and Loss
+COGS,Cost of goods sold,120,Statement of Profit and Loss
+EBIT,EBIT (operating profit),30,Statement of Profit and Loss
+INT,Interest expense (finance costs),6,Statement of Profit and Loss
+PBT,Profit before tax,24,Statement of Profit and Loss
+NP,Net profit (profit after tax),18,Statement of Profit and Loss
+INV,Inventories,20,Balance Sheet
+TR,Trade receivables,25,Balance Sheet
+CASH,Cash and cash equivalents,15,Balance Sheet
+CA,Total current assets,60,Balance Sheet
+CL,Total current liabilities,40,Balance Sheet
+TP,Trade payables,30,Balance Sheet
+DEBT,Total debt (borrowings),50,Balance Sheet
+SF,Shareholders' funds (equity),100,Balance Sheet
+TA,Total assets,190,Balance Sheet

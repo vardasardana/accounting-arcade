@@ -243,3 +243,51 @@ export function bgShop() {
     `<pattern id="aw2" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="30" height="60" fill="${C.green}"/><rect x="30" width="30" height="60" fill="#fff"/></pattern>`);
 }
 export function glassJar() { return svg(130, 150, `<rect x="10" y="26" width="110" height="118" rx="22" fill="#EAF7FD" fill-opacity=".75" stroke="${O}" stroke-width="3.5"/><rect x="22" y="40" width="10" height="80" rx="5" fill="#fff"/><rect x="4" y="8" width="122" height="24" rx="8" fill="${C.gold}" stroke="${O}" stroke-width="3.5"/>`); }
+
+// ---------- Level 5: fairground shooting gallery ----------
+export const FAIR = { RAIL1: 318, RAIL2: 520 };
+export function bgFair() {
+  const bulbs = (y, n, x0, x1) => Array.from({ length: n }, (_, i) => { const x = x0 + (x1 - x0) * i / (n - 1); return `<circle cx="${x}" cy="${y + Math.sin(i) * 3}" r="7" fill="${[C.yellow, C.orange, C.sky, C.purple][i % 4]}" stroke="${O}" stroke-width="2"/>`; }).join('');
+  const rail = (y) => `<rect x="40" y="${y}" width="1200" height="26" rx="6" fill="#B5835A" stroke="${O}" stroke-width="3.5"/><path d="M52 ${y + 12} H1228" stroke="#D6A577" stroke-width="5"/>${Array.from({ length: 13 }, (_, i) => `<circle cx="${70 + i * 95}" cy="${y + 13}" r="4" fill="${O}" opacity=".5"/>`).join('')}`;
+  return svg(W, H, `
+   <rect width="${W}" height="${H}" fill="#3A2A55"/>
+   ${Array.from({ length: 16 }, (_, i) => `<path d="M${i * 80} 120 Q${i * 80 + 40} 150 ${i * 80 + 80} 120 V600 H${i * 80} Z" fill="${i % 2 ? '#7A2E4E' : '#8E3A5E'}"/>`).join('')}
+   <path d="M0 0 H${W} V96 ${Array.from({ length: 16 }, (_, i) => `Q${W - i * 80 - 40} 140 ${W - i * 80 - 80} 96`).join(' ')} Z" fill="url(#fa)" stroke="${O}" stroke-width="4"/>
+   <path d="M0 150 Q320 190 640 150 Q960 190 1280 150" stroke="${O}" stroke-width="2.5" fill="none"/>${bulbs(162, 20, 20, 1260)}
+   <rect x="0" y="${FAIR.RAIL1 + 20}" width="${W}" height="${FAIR.RAIL2 - FAIR.RAIL1 - 20}" fill="#4B2F60" opacity=".55"/>
+   ${rail(FAIR.RAIL1)}
+   <rect x="0" y="${FAIR.RAIL2}" width="${W}" height="${H - FAIR.RAIL2}" fill="#9C6B3F" stroke="${O}" stroke-width="4"/>
+   <rect x="0" y="${FAIR.RAIL2}" width="${W}" height="24" fill="#D6A577" stroke="${O}" stroke-width="4"/>
+   ${Array.from({ length: 9 }, (_, i) => `<path d="M${i * 160} ${FAIR.RAIL2 + 24} V${H}" stroke="${O}" stroke-width="2" opacity=".35"/>`).join('')}
+`,
+    `<pattern id="fa" width="80" height="80" patternUnits="userSpaceOnUse"><rect width="40" height="80" fill="${C.verm}"/><rect x="40" width="40" height="80" fill="#FFF6E5"/></pattern>`);
+}
+export function woodTarget(w = 340, h = 130) {
+  return svg(w, h + 60, `<rect x="${w / 2 - 9}" y="${h - 10}" width="18" height="70" fill="#7A4E2A" stroke="${O}" stroke-width="3"/>
+   <rect x="4" y="4" width="${w - 8}" height="${h - 8}" rx="18" fill="#E9C38F" stroke="${O}" stroke-width="4"/>
+   ${[28, 54, 80].map((y) => `<path d="M14 ${y} Q${w / 2} ${y + 6} ${w - 14} ${y}" stroke="#C99A62" stroke-width="2.5" fill="none" opacity=".7"/>`).join('')}
+   <rect x="12" y="12" width="${w - 24}" height="${h - 24}" rx="12" fill="#FFF6E5" opacity=".88"/>
+   <g transform="translate(46 ${h / 2})"><circle r="30" fill="#fff" stroke="${O}" stroke-width="3"/><circle r="21" fill="${C.verm}"/><circle r="12" fill="#fff"/><circle r="5" fill="${C.verm}"/></g>`);
+}
+export function crosshair() { return svg(64, 64, `<circle cx="32" cy="32" r="20" fill="none" stroke="#fff" stroke-width="7"/><circle cx="32" cy="32" r="20" fill="none" stroke="${O}" stroke-width="3"/><path d="M32 2 V20 M32 44 V62 M2 32 H20 M44 32 H62" stroke="#fff" stroke-width="7"/><path d="M32 2 V20 M32 44 V62 M2 32 H20 M44 32 H62" stroke="${O}" stroke-width="3"/>`); }
+
+// ---------- Level 6: supermarket ----------
+export function bgMarket() {
+  const tiles = Array.from({ length: 22 }, (_, i) => `<path d="M${i * 64} 470 V${H}" stroke="#C9D3DC" stroke-width="2"/>`).join('') + [520, 580, 650].map((y) => `<path d="M0 ${y} H${W}" stroke="#C9D3DC" stroke-width="2"/>`).join('');
+  const shelf = (y) => `<rect x="22" y="${y}" width="886" height="16" rx="4" fill="#E69F00" stroke="${O}" stroke-width="3"/><rect x="22" y="${y + 16}" width="886" height="8" fill="#B87A00" stroke="${O}" stroke-width="2"/>`;
+  return svg(W, H, `
+   <rect width="${W}" height="${H}" fill="#F3F7FB"/>
+   <rect y="0" width="${W}" height="90" fill="${C.green}"/><rect y="86" width="${W}" height="8" fill="${O}"/>
+   <rect x="14" y="100" width="902" height="360" rx="10" fill="#DDE7F0" stroke="${O}" stroke-width="3.5"/>
+   ${[205, 320, 435].map(shelf).join('')}
+   <rect y="470" width="${W}" height="${H - 470}" fill="#EEF2F5"/>${tiles}
+   <rect x="924" y="100" width="344" height="512" rx="14" fill="#E6F2EC" stroke="${O}" stroke-width="3" opacity=".9"/>`);
+}
+export function trolley() {
+  return svg(330, 330, `<path d="M10 20 H48 L70 70" stroke="${O}" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+   <path d="M62 60 H316 L290 262 H92 Z" fill="#BFE6FA" fill-opacity=".55" stroke="${O}" stroke-width="5" stroke-linejoin="round"/>
+   ${Array.from({ length: 9 }, (_, i) => `<path d="M${90 + i * 26} 64 L${106 + i * 21} 258" stroke="${O}" stroke-width="2" opacity=".35"/>`).join('')}
+   <path d="M70 160 H306" stroke="${O}" stroke-width="5"/>
+   <path d="M92 262 L100 296 H286" stroke="${O}" stroke-width="7" fill="none" stroke-linejoin="round"/>
+   ${[118, 266].map((x) => `<circle cx="${x}" cy="308" r="16" fill="#2A2F36" stroke="${O}" stroke-width="4"/><circle cx="${x}" cy="308" r="6" fill="#C9CED6"/>`).join('')}`);
+}

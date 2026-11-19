@@ -8,6 +8,7 @@ const errs = [];
 p.on('console', (m) => { if (m.type() === 'error') errs.push('console.error: ' + m.text()); });
 p.on('pageerror', (e) => console.log('PAGEERR', e.message, e.stack)); p.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 4).join('\n')));
 p.on('dialog', (d) => d.accept());
+await p.addInitScript(([perf, buy]) => { window.__PERFECT = perf; window.__BUY = buy; }, [!!process.env.PERFECT, process.env.BUY || 'greedy']);
 await p.goto(URL);
 await p.waitForFunction(() => window.__AA && document.querySelector('#ui .play'), null, { timeout: 30000 });
 await p.waitForTimeout(800);
@@ -35,14 +36,35 @@ const act = () => {
   if (q('.explain .go')) { if (!W.acted.explainShot) { W.acted.explainShot = 1; return 'EXPLAINSHOT'; } click('.explain .go'); return key + ':explain'; }
   const ban = q('.banner.pe'); if (ban) { ban.click(); return key + ':banner'; }
   if (key === 'LevelEnd') { if (!W.acted.endShot) { W.acted.endShot = 1; return 'ENDSHOT'; } click('.next'); return 'LevelEnd'; }
-  if (key === 'Shop') { if (!W.acted['shop' + S()]) { W.acted['shop' + S()] = 1; const j = q('.shopjar[data-k="peek"]'); j && j.click(); } return 'Shop:ready'; }
+  if (key === 'Shop') {
+    if (!W.acted['shop' + S()]) {
+      W.acted['shop' + S()] = 1;
+      const AA = window.__AA, pr = AA.S.config.shop, keys = ['peek', 'slow', 'shield', 'double', 'heart'];
+      const cap = (k) => pr.max_per_visit?.[k] ?? pr.max_each ?? 1;
+      const full = keys.reduce((a, k) => a + pr[k] * cap(k), 0);
+      const before = AA.S.run.wallet, bought = [];
+      if (window.__BUY !== 'none') {
+        // greedy: try to buy everything allowed, cheapest first, by clicking the jars
+        for (const k of keys.slice().sort((x, y) => pr[x] - pr[y])) for (let n = 0; n < cap(k) + 1; n++) { const w0 = AA.S.run.wallet; q('.shopjar[data-k="' + k + '"]').click(); if (AA.S.run.wallet < w0) bought.push(k); }
+      }
+      (W.shops ||= []).push({ before_level: S() + 1, wallet: before, total_earned: AA.S.run.total, cost_of_everything: full, bought, left: AA.S.run.wallet });
+    }
+    return 'Shop:ready';
+  }
   if (key === 'Results') return 'Results';
   if (!/^L\d$/.test(key) || sc.frozen) return key + ':wait';
   function S() { return window.__AA.S.run ? Object.keys(window.__AA.S.run.levels).length : 0; }
-  const wrongNow = !W.wrong[key]; // first item of each level answered wrongly on purpose
+  const wrongNow = !window.__PERFECT && !W.wrong[key]; // first item of each level answered wrongly on purpose
   if (key === 'L1') {
     const c = sc.card; if (!c) return 'L1:idle';
-    if (!W.acted[c.item.id + 'seen']) { W.acted[c.item.id + 'seen'] = 1; return 'L1:ready'; }
+    if (!W.acted[c.item.id + 'seen']) {
+      W.acted[c.item.id + 'seen'] = 1;
+      W.l1n = (W.l1n || 0) + 1;
+      if (W.l1n === 1) return 'SHOT:11_level1_play';
+      if (W.l1n === 3) return 'SHOT:11b_level1_basket_change';
+      (W.l1sets ||= []).push(sc.baskets.map((x) => x.name).join(' | ') + '  <=  ' + c.item.correct);
+      return 'L1:ready';
+    }
     const b = wrongNow ? sc.baskets.find((x) => x.name !== c.item.correct) : sc.baskets.find((x) => x.name === c.item.correct);
     if (!b) return 'L1:ERROR no basket for ' + c.item.correct;
     W.wrong[key] = 1; sc.cartX = c.x - b.off; sc.cartTarget = null; sc.judge(c); return 'L1:answered ' + c.item.id;
@@ -72,26 +94,37 @@ const act = () => {
     sc.steer(lane); sc.lock(); return 'L4:answered ' + it.id;
   }
   if (key === 'L5') {
-    const c = sc.card; if (!c) return 'L5:idle';
-    if (!W.acted[c.item.id + 'seen']) { W.acted[c.item.id + 'seen'] = 1; return 'L5:ready'; }
-    const it = c.item, stA = sc.stage.startsWith('A');
-    const target = stA ? { A1: 'Financing', A2: 'Investing', A3: 'Operating' }[sc.stage] : null;
+    const c = sc.target; if (!c || c.phase === 'rise') return 'L5:idle';
+    if (!W.acted[c.item.id + 'seen']) {
+      W.acted[c.item.id + 'seen'] = 1;
+      if (!W.acted['L5shot' + sc.stage]) { W.acted['L5shot' + sc.stage] = 1; return 'SHOT:15' + { A: 'a', B: 'b', C: 'c' }[sc.stage] + '_level5_stage' + sc.stage; }
+      return 'L5:ready';
+    }
+    const gi = sc.guns.findIndex((g) => g.key === c.item.correct);
+    if (gi < 0) return 'L5:ERROR no gun for ' + c.item.correct;
     W.wrong[key] = 1;
-    if (wrongNow) { sc.judge(c, ['Operating', 'Investing', 'Financing'].find((x) => x !== it.correct)); return 'L5:wrong'; }
-    if (it.trap) { sc.swat(c); return 'L5:swat ' + it.id; }
-    if (stA && it.correct !== target) { sc.judge(c, null); return 'L5:letfall ' + it.id; }
-    sc.judge(c, it.correct); return 'L5:answered ' + it.id + ' ' + sc.stage;
+    sc.pickGun(wrongNow ? (gi + 1) % sc.guns.length : gi); sc.shoot(c);
+    return 'L5:answered ' + c.item.id + ' ' + sc.stage;
   }
   if (key === 'L6') {
-    if (sc.mode === 'compare') {
-      const it = sc.cur; if (!it || sc.judging || !sc.cards.length) return 'L6:idle';
-      if (!W.acted[it.id + 'seen']) { W.acted[it.id + 'seen'] = 1; return 'L6:ready'; }
-      const s = wrongNow ? (sc.weakSlot + 1) % sc.cards.length : sc.weakSlot; W.wrong[key] = 1;
-      sc.fireAt(s); return 'L6:answered ' + it.id;
+    if (click('.vnote button')) return 'L6:note';
+    if (sc.mode === 'shop' && sc.phase === 'pick') {
+      const r = sc.cur;
+      if (!W.acted[r.id + 'seen']) { W.acted[r.id + 'seen'] = 1; return 'L6:ready'; }
+      if (wrongNow) { W.wrong[key] = 1; sc.put(window.__AA.S.data.shelf.find((x) => x.id !== r.numerator && x.id !== r.denominator).id, 'top'); return 'L6:wrongpick'; }
+      if (!sc.slots.top) { sc.put(r.numerator, 'top'); return 'L6:top'; }
+      if (!sc.slots.bottom) { sc.put(r.denominator, 'bottom'); return 'L6:bottom'; }
+      if (!W.acted.l6trolley) { W.acted.l6trolley = 1; return 'SHOT:16a_level6_supermarket'; }
+      sc.checkout(); return 'L6:checkout ' + r.id;
     }
-    if (sc.mode === 'extract') {
-      if (sc.phase === 'pick') { if (!W.acted[sc.cur.id + 'pick']) { W.acted[sc.cur.id + 'pick'] = 1; sc.lines.forEach((l, i) => { if (!!l.d.needed !== l.sel) sc.toggleLine(i); }); return 'L6:picked'; } sc.compute(); return 'L6:computed ' + sc.cur.id; }
-      if (sc.phase === 'judge') { sc.verdict(sc.cur.verdict); return 'L6:verdict ' + sc.cur.verdict; }
+    if (sc.mode === 'shop' && sc.phase === 'checkout') {
+      if (!W.acted.l6till) { W.acted.l6till = 1; return 'SHOT:16b_level6_checkout'; }
+      const i = sc.opts.indexOf(sc.cur.answer); if (i < 0) return 'L6:ERROR answer not in options';
+      sc.pay(i); return 'L6:paid ' + sc.cur.id;
+    }
+    if (sc.mode === 'verdict' && sc.phase === 'judge') {
+      if (!W.acted.l6verdict) { W.acted.l6verdict = 1; return 'SHOT:16c_level6_verdict'; }
+      sc.verdict(sc.cur.correct); return 'L6:verdict ' + sc.cur.id + ' ' + sc.cur.correct;
     }
     return 'L6:idle';
   }
@@ -105,13 +138,13 @@ while (Date.now() - t0 < 25 * 60 * 1000) {
   if (r !== last) { const line = ((Date.now() - t0) / 1000).toFixed(1) + "s " + r; log.push(line); last = r; if (process.env.V) console.log(line); }
   if (r.includes('ERROR')) { console.log('BOT ERROR', r); break; }
   const k = r.split(':')[0]; seenScenes.add(k);
-  if (/^L\d:ready/.test(r) && !shot[k]) {
-    shot[k] = 1; await p.waitForTimeout(k === 'L1' || k === 'L5' ? 4200 : 1800);
-    await p.screenshot({ path: `shots/1${k[1]}_level${k[1]}_play.png` });
-    const n = await p.evaluate(() => { const s = window.__AA.game.scene.getScenes(true).pop(); return s.scene.key; });
+  if (r.startsWith('SHOT:')) { await p.waitForTimeout(/level1/.test(r) ? 500 : 900); if (!process.env.NOSHOTS) await p.screenshot({ path: `shots/${r.slice(5)}.png` }); continue; }
+  if (/^L[234]:ready/.test(r) && !shot[k]) {
+    shot[k] = 1; await p.waitForTimeout(1800);
+    if (!process.env.NOSHOTS) await p.screenshot({ path: `shots/1${k[1]}_level${k[1]}_play.png` });
     continue;
   }
-  if (r === 'EXPLAINSHOT') { await p.waitForTimeout(700); await p.screenshot({ path: 'shots/18_explanation_popup.png' }); continue; }
+  if (r === 'EXPLAINSHOT') { await p.waitForTimeout(700); if (!process.env.NOSHOTS) await p.screenshot({ path: 'shots/18_explanation_popup.png' }); continue; }
   if (r === 'ENDSHOT') { await p.waitForTimeout(2500); await p.screenshot({ path: 'shots/19_level_end.png' }); continue; }
   if (r === 'Shop:ready') {
     await p.waitForTimeout(600);
@@ -126,6 +159,8 @@ const elapsed = ((Date.now() - t0) / 1000).toFixed(0);
 const sum = await p.evaluate(() => { const r = window.__AA.S.run; return { total: r.total, wallet: r.wallet, levels: Object.fromEntries(Object.entries(r.levels).map(([k, v]) => [k, { stars: v.stars, acc: +v.acc.toFixed(2), att: v.attempted, failed: v.failed }])), logN: r.log.length, inv: r.inventory }; });
 console.log(log.filter((l) => !/idle|wait|banner|explain/.test(l)).join('\n'));
 console.log('ELAPSED_S', elapsed); console.log(JSON.stringify(sum, null, 1));
+console.log('SHOPS', JSON.stringify(await p.evaluate(() => window.__bot.shops), null, 1));
+console.log('L1 SETS', JSON.stringify(await p.evaluate(() => window.__bot.l1sets), null, 1));
 console.log('ERRORS', errs.length ? errs.join('\n') : 'none');
 // leaderboard after the run
 await p.click('#ui .lb'); await p.waitForTimeout(1200); await p.screenshot({ path: 'shots/31_leaderboard.png' });

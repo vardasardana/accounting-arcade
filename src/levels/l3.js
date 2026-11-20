@@ -2,7 +2,7 @@ import { LevelBase } from './base.js';
 import { S, fs } from '../core/state.js';
 import { UI, esc, $ } from '../core/ui.js';
 import { sfx, musicTempo } from '../core/audio.js';
-import { bg, shuffle } from '../scenes/common.js';
+import { bg, shuffle, drawPerGroup } from '../scenes/common.js';
 import { coinBurst, stampText, confetti, puff } from './fx.js';
 
 const BELT_Y = 352, SORT_X = 560, RED_X = 1080, START_X = 150;
@@ -39,7 +39,7 @@ export class Level3 extends LevelBase {
   introRule() { return 'Intention decides: the same bicycle is inventory for a bike shop but PPE for a courier.'; }
   buildWorld() {
     bg(this, 'bg_factory');
-    this.items = S.data.l3;
+    this.items = drawPerGroup(S.data.l3, (x) => x.wave, S.config.levels['3'].per_wave);
     this.waveList = [...new Set(this.items.map((i) => i.wave))].sort((a, b) => a - b);
     this.beltG = this.add.graphics().setDepth(5); this.beltOff = 0;
     this.add.rectangle(SORT_X, BELT_Y, 130, 120).setStrokeStyle(5, 0xF0E442, 0.9).setDepth(6);

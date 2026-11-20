@@ -31,7 +31,7 @@ export class Level6 extends LevelBase {
     this.bgB = this.add.image(0, 0, 'bg_sling').setOrigin(0, 0).setDisplaySize(1280, 720).setDepth(1).setVisible(false);
     this.cfg = S.config.levels['6'] || {};
     this.ratios = shuffle(S.data.l6).slice(0, this.cfg.ratios ?? 6);
-    this.slingRounds = S.data.l6g.rounds;
+    this.slingRounds = shuffle(S.data.l6g.rounds).slice(0, this.cfg.sling_rounds ?? 2).sort((a, b) => S.data.l6g.rounds.indexOf(a) - S.data.l6g.rounds.indexOf(b)).map((rd) => ({ ...rd, headlines: shuffle(rd.headlines).slice(0, this.cfg.headlines_per_round ?? 4) }));
     this.total = this.ratios.length + this.slingRounds.reduce((a, r) => a + r.headlines.length, 0); this.done = 0;
     this.layer = UI.add('', '');
     this.byFam = {};

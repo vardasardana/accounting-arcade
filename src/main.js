@@ -20,13 +20,13 @@ class BootScene extends Phaser.Scene {
       const fonts = ['600 20px Fredoka', '700 20px Fredoka', '500 20px Fredoka', '400 20px "Atkinson Hyperlegible"', '700 20px "Atkinson Hyperlegible"'];
       await Promise.race([Promise.all(fonts.map((f) => document.fonts.load(f))), new Promise((r) => setTimeout(r, 3000))]);
       const res = await loadAll();
-      S.config = res.config; S.data = res.data; S.report = res.report; S.overrides = res.overrides || [];
+      S.config = res.config; S.data = res.data; S.report = res.report; S.overrides = res.overrides || []; S.qsource = res.source;
       loadSettings(); applyBodyClasses();
       try { S.player = JSON.parse(localStorage.getItem('aa_player') || 'null'); } catch { S.player = null; }
       await buildTextures(this.game);
       window.__AA = { S, game: this.game };
       if (loading) loading.remove();
-      if (S.report.some((r) => r.severity === 'error')) this.scene.start('Validation');
+      if (S.report.some((r) => r.severity === 'error' && !String(r.file).startsWith('Sheet'))) this.scene.start('Validation'); // sheet problems are listed in the instructor console only
       else this.scene.start('Menu');
     } catch (e) {
       console.error(e);

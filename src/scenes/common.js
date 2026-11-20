@@ -12,6 +12,11 @@ export function fadeTo(scene, key, data) {
   scene.cameras.main.once('camerafadeoutcomplete', () => scene.scene.start(key, data));
 }
 export function fadeIn(scene) { if (!S.settings.reducedMotion) scene.cameras.main.fadeIn(250, 14, 26, 44); }
+// Random draw for each run: up to caps[i] items from group i (groups sorted by key). A bigger pool means more variety, not a longer level.
+export function drawPerGroup(items, keyOf, caps) {
+  const keys = [...new Set(items.map(keyOf))].sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
+  return keys.flatMap((k, i) => { const cap = Array.isArray(caps) ? caps[Math.min(i, caps.length - 1)] : caps; const g = shuffle(items.filter((x) => keyOf(x) === k)); return Number.isFinite(cap) && cap > 0 ? g.slice(0, cap) : g; });
+}
 export function shuffle(a) { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
 export function wrapText(s, max) {
   const words = s.split(' '); const lines = []; let cur = '';

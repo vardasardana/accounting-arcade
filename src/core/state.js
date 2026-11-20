@@ -37,7 +37,7 @@ export function applyBodyClasses() {
   document.body.classList.toggle('high-contrast', !!S.settings.highContrast);
   document.body.classList.toggle('reduced-motion', !!S.settings.reducedMotion);
 }
-export function classCode() { return localStorage.getItem('aa_class_code') || S.config?.class_code || ''; }
+export function classCode() { return S.config?.section || localStorage.getItem('aa_class_code') || S.config?.class_code || ''; }
 export function speedLocked() { return localStorage.getItem('aa_speed_lock') ? true : !!S.config?.speed_locked; }
 export function effectiveSpeed() {
   const lock = localStorage.getItem('aa_speed_lock');

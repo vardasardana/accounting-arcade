@@ -3,7 +3,7 @@ import { LevelBase } from './base.js';
 import { S, fs, fmtMoney, fmtSigned } from '../core/state.js';
 import { UI, esc, $ } from '../core/ui.js';
 import { sfx, musicTempo } from '../core/audio.js';
-import { bg, shuffle } from '../scenes/common.js';
+import { bg, shuffle, drawPerGroup } from '../scenes/common.js';
 import { coinBurst, confetti } from './fx.js';
 
 const PIVOT = { x: 640, y: 278 }, ARM = 330, PAN_DROP = 170;
@@ -22,7 +22,7 @@ export class Level2 extends LevelBase {
   introRule() { return 'Assets = Liabilities + Equity.'; }
   buildWorld() {
     bg(this, 'bg_roastery');
-    this.items = S.data.l2.slice().sort((a, b) => a.wave - b.wave || a.id.localeCompare(b.id));
+    this.items = drawPerGroup(S.data.l2, (x) => x.wave, S.config.levels['2'].per_wave).sort((a, b) => a.wave - b.wave || a.id.localeCompare(b.id));
     // jars from data, in first-appearance order per side
     const seen = new Map();
     for (const it of this.items) for (const e of it.effects) for (const n of e.alts || [e.item]) if (!seen.has(n)) seen.set(n, e.side);

@@ -24,7 +24,10 @@ export class Level4 extends LevelBase {
   introRule() { return 'Functional order: Revenue → COGS → Gross Profit → Operating expenses → EBITDA → D&A → EBIT → Non-operating items → PBT → Tax → Net Profit.'; }
   buildWorld() {
     bg(this, 'bg_road').setDisplaySize(960, 720);
-    this.items = S.data.l4.slice().sort((a, b) => a.stage - b.stage);
+    { // rows with receipt lines build the statement, so they always play; the other questions are drawn at random
+      const all = S.data.l4.map((x, i) => ({ x, i })), side = shuffle(all.filter((o) => !o.x.receipt.length)).slice(0, S.config.levels['4'].side_questions ?? 3);
+      this.items = [...all.filter((o) => o.x.receipt.length), ...side].sort((a, b) => a.x.stage - b.x.stage || (a.x.receipt.length ? 1 : 0) - (b.x.receipt.length ? 1 : 0) || a.i - b.i).map((o) => o.x);
+    }
     this.road = this.add.graphics().setDepth(2);
     this.gantry = this.add.graphics().setDepth(8);
     this.scenery = [];

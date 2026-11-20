@@ -163,7 +163,7 @@ export class LeaderboardScene extends Phaser.Scene {
     const el = UI.add(`<div class="panel" style="left:160px;top:24px;width:960px;height:640px">
       <img src="${pennyUri('cheer')}" alt="" style="position:absolute;right:20px;top:10px;width:96px">
       <h1 class="h1">🏆 Leaderboard</h1>
-      <div style="display:flex;gap:10px;margin:8px 0 10px">${shared ? `<button class="chip on tab" data-t="class">Class</button>` : ''}<button class="chip ${shared ? '' : 'on'} tab" data-t="local">This device</button></div>
+      <div style="display:flex;gap:10px;margin:8px 0 10px">${shared ? `<button class="chip on tab" data-t="class">Class${S.config.section ? ' - ' + esc(S.config.section) : ''}</button>` : ''}<button class="chip ${shared ? '' : 'on'} tab" data-t="local">This device</button></div>
       <div class="scroll body" style="height:450px"></div>
       <div style="position:absolute;right:26px;bottom:20px;display:flex;gap:10px"><button class="btn cream back">Menu</button>${data?.fromResults ? '<button class="btn orange again">Play again</button>' : ''}</div></div>`);
     const body = $(el, '.body');
@@ -224,7 +224,7 @@ export class TeacherScene extends Phaser.Scene {
         <div>
           <label class="h2" style="font-size:19px" for="cc">Class code (shared leaderboard)</label>
           <input id="cc" type="text" value="${esc(classCode())}" style="font-size:19px">
-          <p class="muted" style="font-size:15px;margin:4px 0 10px">Shared board: ${sharedEnabled() ? '✅ connected (Google Sheet)' : '⚪ off. Set LEADERBOARD_URL in config.json'}</p>
+          <p class="muted" style="font-size:15px;margin:4px 0 10px">Shared board: ${sharedEnabled() ? `✅ connected (${S.config.defaultSheet ? 'default Google Sheet' : 'your Google Sheet from this link'})` : '⚪ off. Set LEADERBOARD_URL in config.json'}${S.config.section ? ` · section from link: <b>${esc(S.config.section)}</b>` : ''}</p>
           <label class="h2" style="font-size:19px">Lock speed for this device</label>
           <div style="display:flex;gap:6px;margin:6px 0 12px">${['', 'relaxed', 'standard', 'fast'].map((s) => `<button class="chip lock ${((localStorage.getItem('aa_speed_lock') || '') === s) ? 'on' : ''}" data-s="${s}" style="font-size:16px">${s || 'Not locked'}</button>`).join('')}</div>
           <label class="h2" style="font-size:19px">Preview mode (answer key on screen)</label>
@@ -235,13 +235,16 @@ export class TeacherScene extends Phaser.Scene {
           <div style="display:flex;gap:8px;margin-top:8px"><button class="btn small cream clearov">Remove loaded files${S.overrides.length ? ` (${S.overrides.length})` : ''}</button></div>
           <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap"><button class="btn small green exp1">Export scores CSV</button><button class="btn small green exp2">Export item log CSV</button><button class="btn small verm clr">Clear local scores</button></div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:10px;min-height:0">
-          <div class="h2" style="font-size:20px">Validation report</div><div class="scroll" style="height:170px;background:#fff;border:2px solid var(--navy);border-radius:12px;padding:6px">${reportTable(S.report)}</div>
+        <div style="display:flex;flex-direction:column;gap:10px;min-height:0;padding-bottom:58px;box-sizing:border-box">
+          <div class="qsrc" style="font-size:15px;background:#fff;border:2px solid var(--navy);border-radius:12px;padding:6px 10px"><b>Questions from:</b> ${esc(S.qsource?.note || 'Built-in question files')}${S.qsource?.tabs?.length ? ` <span class="muted">(${S.qsource.tabs.length} tabs)</span>` : ''} <button class="btn small cream reloadq" style="margin-left:8px;padding:2px 10px;font-size:14px">Reload questions</button></div>
+          <div class="h2" style="font-size:20px">Validation report <span class="muted" style="font-size:15px">(${S.report.filter((r) => r.severity === 'error').length} rows skipped, ${S.report.filter((r) => r.severity !== 'error').length} notes)</span></div><div class="scroll" style="height:150px;background:#fff;border:2px solid var(--navy);border-radius:12px;padding:6px">${reportTable(S.report)}</div>
           <div class="h2" style="font-size:20px">Local scores on this device (${board.length} runs)</div><div class="scroll" style="flex:1;background:#fff;border:2px solid var(--navy);border-radius:12px;padding:6px">${boardTable(board)}</div>
         </div></div>
-      <div style="position:absolute;right:26px;bottom:16px;display:flex;gap:10px"><button class="btn cream back">Back to menu</button></div></div>`);
+      <div style="position:absolute;right:26px;bottom:16px;display:flex;gap:10px"><button class="btn green mklink">🔗 Make a game link + QR</button><button class="btn cream back">Back to menu</button></div></div>`);
     $(el, '#cc').addEventListener('change', (e) => localStorage.setItem('aa_class_code', e.target.value.trim()));
     el.querySelectorAll('.chip.lock').forEach((b) => b.addEventListener('click', () => { if (b.dataset.s) localStorage.setItem('aa_speed_lock', b.dataset.s); else localStorage.removeItem('aa_speed_lock'); el.querySelectorAll('.chip.lock').forEach((x) => x.classList.toggle('on', x === b)); }));
+    $(el, '.reloadq').addEventListener('click', () => location.reload());
+    $(el, '.mklink').addEventListener('click', () => window.open('make-link.html', '_blank', 'noopener'));
     $(el, '#pv').addEventListener('click', (e) => { S.preview = !S.preview; e.currentTarget.classList.toggle('on', S.preview); });
     $(el, '#file').addEventListener('change', async (e) => {
       const f = e.target.files[0]; if (!f) return;

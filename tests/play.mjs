@@ -1,5 +1,6 @@
 // Automated full play-through: every level and stage, screenshots, console-error check.
 import { chromium } from 'playwright-core';
+import { routeMocks, ID_A } from './mockroute.mjs';
 const URL = process.env.URL || 'http://localhost:4173/';
 const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--autoplay-policy=no-user-gesture-required'] });
 const ctx = await b.newContext({ viewport: { width: 1280, height: 720 } });
@@ -9,7 +10,8 @@ p.on('console', (m) => { if (m.type() === 'error') errs.push('console.error: ' +
 p.on('pageerror', (e) => console.log('PAGEERR', e.message, e.stack)); p.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 4).join('\n')));
 p.on('dialog', (d) => d.accept());
 await p.addInitScript(([perf, buy]) => { window.__PERFECT = perf; window.__BUY = buy; }, [!!process.env.PERFECT, process.env.BUY || 'greedy']);
-await p.goto(URL);
+if (process.env.MOCK) await routeMocks(p); // LINK='?i=…' with MOCK=1 sends scores and questions to the local mock Sheet
+await p.goto(URL + (process.env.LINK || (process.env.MOCK ? `?i=${ID_A}&section=Sec%20A` : '')));
 await p.waitForFunction(() => window.__AA && document.querySelector('#ui .play'), null, { timeout: 30000 });
 await p.waitForTimeout(800);
 await p.screenshot({ path: 'shots/01_title.png' });

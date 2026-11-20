@@ -34,3 +34,13 @@ Do these steps once, and every student's finished run also appears on one shared
 - To reset a class board, delete the rows in the sheet (keep the header row).
 - If you change the script later, use **Deploy → Manage deployments → Edit → Version: New version** so the URL stays the same.
 - Practice runs are never sent to the sheet; only full class runs are.
+
+## 6. Questions in the same Sheet (optional)
+1. After pasting the latest `Code.gs`, choose **setupQuestionTabs** in the function list at the top of the editor and click **Run**. Allow the new permission ("Connect to an external service": it reads the game's current questions from the game website once).
+2. The Sheet gets a **README** tab and twelve tabs starting with `Q_` (one per question file; the Headline Slingshot uses three: `Q_L6_sling_ratios`, `Q_L6_sling_companies`, `Q_L6_sling_headlines`). A tab that already has rows is never overwritten.
+3. **Deploy → Manage deployments → pencil (Edit) → Version: New version → Deploy**, so the same `/exec` URL keeps working.
+4. The game reads the tabs every time it starts (5-second limit). If the Sheet cannot be reached it uses the last copy saved on that device, otherwise its built-in files. Rows with mistakes are skipped and listed in the instructor console (padlock on the main menu, PIN) under **Validation report**.
+
+## 7. Several instructors, several sections
+- Each instructor: **File → Make a copy** of this Sheet (the script comes along), clear the Scores tab, deploy their own web app (steps 3 above), then open `make-link.html` on the game site to get their link and QR code.
+- The link looks like `https://vardasardana.github.io/accounting-arcade/?i=<web app id>&section=Sec%20A`. `i` sends scores **and** questions to that instructor's Sheet; `section` gives that section its own leaderboard. Without them the game uses the default Sheet and class code from `config.json`.

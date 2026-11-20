@@ -15,7 +15,7 @@ await p.waitForTimeout(800);
 await p.screenshot({ path: 'shots/01_title.png' });
 await p.click('#ui .play');
 await p.waitForSelector('#ui #nm');
-await p.fill('#ui #nm', 'Varda');
+await p.fill('#ui #nm', process.env.NAME || 'Varda');
 await p.click('#ui .av[data-a="3"]');
 await p.waitForTimeout(400);
 await p.screenshot({ path: 'shots/02_avatar_pick.png' });
@@ -169,5 +169,8 @@ console.log('L2 answers given via the Bank jar instead of Cash:', await p.evalua
 console.log('L1 SETS', JSON.stringify(await p.evaluate(() => window.__bot.l1sets), null, 1));
 console.log('ERRORS', errs.length ? errs.join('\n') : 'none');
 // leaderboard after the run
-await p.click('#ui .lb'); await p.waitForTimeout(1200); await p.screenshot({ path: 'shots/31_leaderboard.png' });
+const shared = await p.evaluate(async () => { for (let i = 0; i < 60; i++) { const s = document.querySelector('.shared-status')?.textContent || ''; if (!/Saving/.test(s)) return s; await new Promise((r) => setTimeout(r, 500)); } return 'timeout'; });
+console.log('SHARED STATUS', shared);
+await p.click('#ui .lb'); await p.waitForSelector('#ui .body .tbl, #ui .body .err, #ui .body .muted:not(:empty)', { timeout: 30000 }); await p.waitForFunction(() => !/Loading the class board/.test(document.querySelector('#ui .body')?.textContent || 'Loading the class board'), null, { timeout: 30000 }); await p.waitForTimeout(800);
+console.log('BOARD', await p.evaluate(() => [...document.querySelectorAll('#ui .body tr')].slice(0, 8).map((t) => t.textContent.replace(/\s+/g, ' ').trim()).join(' | '))); await p.screenshot({ path: 'shots/31_leaderboard.png' });
 await b.close();

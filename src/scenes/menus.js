@@ -172,7 +172,7 @@ export class LeaderboardScene extends Phaser.Scene {
       if (t === 'local') { body.innerHTML = boardTable(sortBoard(localBoard()), data?.runId); return; }
       body.innerHTML = '<p class="muted" style="text-align:center;margin-top:40px">Loading the class board…</p>';
       const rows = await fetchShared();
-      body.innerHTML = rows === null ? '<p class="err" style="text-align:center">Could not reach the class leaderboard. Showing nothing; try again in a moment.</p>' : boardTable(sortBoard(rows), data?.runId);
+      body.innerHTML = rows === null ? '<p class="err" style="text-align:center">Could not reach the class leaderboard (offline?). Showing the scores saved on this device instead.</p>' + boardTable(sortBoard(localBoard()), data?.runId) : boardTable(sortBoard(rows), data?.runId);
     };
     el.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => show(b.dataset.t)));
     show(shared ? 'class' : 'local');

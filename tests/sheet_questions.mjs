@@ -1,6 +1,6 @@
 // Questions from the Google Sheet, tested against tests/mock_sheet.py (port 4290). Checks:
 // sheet load + bad row skipped/reported + missing tab falls back + extra row joins the pool; cached copy when the Sheet is down;
-// built-in files when blocked with no cache; old script (no tabs); slow Sheet (5 s timeout).
+// built-in files when blocked with no cache; old script (no tabs); slow Sheet (timeout, then fallback).
 import { chromium } from 'playwright-core';
 import fs from 'fs';
 const MOCK = 'http://127.0.0.1:4290/exec';

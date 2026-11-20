@@ -4,7 +4,7 @@
   "LEADERBOARD_URL": "https://script.google.com/macros/s/AKfycbwdaqGVdsxyLoPopv8BNSz0tn4bJfmPAUM2fUlWykIH-1CrFPjLpCZ_obd_WRkojwQpTg/exec",
   "class_code": "ACCT-TRIAL",
   "QUESTIONS_FROM_SHEET": true,
-  "QUESTIONS_TIMEOUT_S": 5,
+  "QUESTIONS_TIMEOUT_S": 15,
   "student_id_enabled": false,
   "default_speed": "standard",
   "speed_locked": false,

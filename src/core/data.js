@@ -120,12 +120,12 @@ export async function loadAll() {
   for (const [k, f] of Object.entries(FILES)) {
     try { bundled[k] = await fetchText(f); } catch (e) { early.push({ file: f, row: '-', id: '', reason: 'File could not be loaded: ' + e.message, severity: 'error' }); bundled[k] = { text: '' }; }
   }
-  // Questions from the Google Sheet: live (short timeout), else the last good copy on this device, else the built-in files.
+  // Questions from the Google Sheet: live (timeout in QUESTIONS_TIMEOUT_S; Apps Script often takes 6-12 s), else the last good copy on this device, else the built-in files.
   let tabs = null, source = { kind: 'files', note: 'Built-in question files' };
   const url = config.QUESTIONS_URL || config.LEADERBOARD_URL;
   if (config.QUESTIONS_FROM_SHEET && url) {
     try {
-      const r = await fetchSheetTabs(url, (config.QUESTIONS_TIMEOUT_S || 5) * 1000);
+      const r = await fetchSheetTabs(url, (config.QUESTIONS_TIMEOUT_S || 15) * 1000);
       if (r.tabs) { tabs = r.tabs; source = { kind: 'sheet', note: 'Google Sheet (loaded just now)' }; try { localStorage.setItem(SHEET_CACHE + url, JSON.stringify({ at: Date.now(), tabs })); } catch {} }
       else source.note = 'Built-in question files (the Google Sheet script has no question tabs yet: run setupQuestionTabs and deploy a new version)';
     } catch (e) {

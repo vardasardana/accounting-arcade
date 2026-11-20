@@ -4,7 +4,7 @@ GET ?action=questions -> question tabs built from public/data, the same way setu
   * Q_L5_targets gets one extra good row (L5-A99)   -> must join the pool
   * Q_L6_shelf is missing                           -> built-in level6_shelf.csv must be used
 GET ?class=... -> scores posted to this mock; POST -> stores a score (so tests never touch the real Sheet).
-MODE file /tmp/mock_mode: 'ok' (default), 'allbad' (every Level 3 row invalid), 'old' (old script, no tabs), 'slow' (answers after 9 s)."""
+MODE file /tmp/mock_mode: 'ok' (default), 'allbad' (every Level 3 row invalid), 'old' (old script, no tabs), 'slow' (answers after 20 s)."""
 import csv, io, json, os, time
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
@@ -49,7 +49,7 @@ class H(BaseHTTPRequestHandler):
         q = parse_qs(urlparse(self.path).query)
         mode = open(MODEFILE).read().strip() if os.path.exists(MODEFILE) else 'ok'
         if q.get('action') == ['questions']:
-            if mode == 'slow': time.sleep(9)
+            if mode == 'slow': time.sleep(20)
             if mode == 'old': return self.send({'ok': True, 'class_code': '', 'rows': []})
             tabs = build()
             if mode == 'allbad':  # every Level 3 row broken -> game must fall back to the built-in file for that tab

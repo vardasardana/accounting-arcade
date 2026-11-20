@@ -1,7 +1,7 @@
 {
   "title": "The Accounting Arcade",
   "instructor_pin": "2468",
-  "LEADERBOARD_URL": "",
+  "LEADERBOARD_URL": "https://script.google.com/macros/s/AKfycbwdaqGVdsxyLoPopv8BNSz0tn4bJfmPAUM2fUlWykIH-1CrFPjLpCZ_obd_WRkojwQpTg/exec",
   "class_code": "ACCT-TRIAL",
   "student_id_enabled": false,
   "default_speed": "standard",

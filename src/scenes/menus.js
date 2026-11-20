@@ -163,7 +163,7 @@ export class LeaderboardScene extends Phaser.Scene {
     const el = UI.add(`<div class="panel" style="left:160px;top:24px;width:960px;height:640px">
       <img src="${pennyUri('cheer')}" alt="" style="position:absolute;right:20px;top:10px;width:96px">
       <h1 class="h1">🏆 Leaderboard</h1>
-      <div style="display:flex;gap:10px;margin:8px 0 10px">${shared ? `<button class="chip on tab" data-t="class">Class ${esc(classCode())}</button>` : ''}<button class="chip ${shared ? '' : 'on'} tab" data-t="local">This device</button></div>
+      <div style="display:flex;gap:10px;margin:8px 0 10px">${shared ? `<button class="chip on tab" data-t="class">Class</button>` : ''}<button class="chip ${shared ? '' : 'on'} tab" data-t="local">This device</button></div>
       <div class="scroll body" style="height:450px"></div>
       <div style="position:absolute;right:26px;bottom:20px;display:flex;gap:10px"><button class="btn cream back">Menu</button>${data?.fromResults ? '<button class="btn orange again">Play again</button>' : ''}</div></div>`);
     const body = $(el, '.body');

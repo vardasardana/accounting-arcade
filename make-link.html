@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Accounting Arcade: make a game link</title>
+<style>
+  :root { --navy: #1F3A5F; --cream: #FFF6E5; --green: #009E73; --orange: #E69F00; --verm: #D55E00; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #EAF3FB; color: var(--navy); font: 17px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+  main { max-width: 760px; margin: 28px auto; background: var(--cream); border: 4px solid var(--navy); border-radius: 18px; padding: 22px 28px 28px; box-shadow: 0 8px 0 rgba(31,58,95,.25); }
+  h1 { margin: 0 0 6px; font-size: 28px; }
+  p.lead { margin: 0 0 18px; }
+  label { display: block; font-weight: 700; margin: 14px 0 4px; }
+  input[type=text] { width: 100%; font-size: 16px; padding: 10px 12px; border: 3px solid var(--navy); border-radius: 10px; background: #fff; }
+  .hint { font-size: 14px; color: #4b5d74; margin-top: 4px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  button, a.btn { font: inherit; font-weight: 700; border: 3px solid var(--navy); border-radius: 12px; padding: 8px 16px; cursor: pointer; background: #fff; color: var(--navy); text-decoration: none; box-shadow: 0 4px 0 rgba(31,58,95,.3); }
+  button.go { background: var(--green); color: #fff; }
+  button:focus-visible, a.btn:focus-visible, input:focus-visible { outline: 4px solid var(--orange); outline-offset: 2px; }
+  .msg { margin-top: 12px; padding: 10px 14px; border-radius: 10px; display: none; }
+  .msg.ok { display: block; background: #DDF3EA; border: 2px solid var(--green); }
+  .msg.err { display: block; background: #FCE3D6; border: 2px solid var(--verm); }
+  .msg.info { display: block; background: #FFF0C7; border: 2px solid var(--orange); }
+  #out { display: none; margin-top: 22px; border-top: 3px dashed var(--navy); padding-top: 18px; }
+  #link { font-family: ui-monospace, Consolas, monospace; font-size: 14px; word-break: break-all; background: #fff; border: 2px solid var(--navy); border-radius: 10px; padding: 10px 12px; }
+  .qrwrap { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; margin-top: 16px; }
+  canvas { width: 320px; height: auto; background: #fff; border: 2px solid var(--navy); border-radius: 10px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🔗 Make a game link</h1>
+  <p class="lead">Paste the web app address of <b>your</b> copy of the Google Sheet. The link you get sends your students' scores to your Sheet and uses the questions in your Sheet.</p>
+
+  <label for="url">Your web app URL (ends with /exec)</label>
+  <input id="url" type="text" placeholder="https://script.google.com/macros/s/AKfy…/exec" autocomplete="off" spellcheck="false">
+  <div class="hint">In Apps Script: Deploy → Manage deployments → copy the Web app URL.</div>
+
+  <label for="sec">Section (optional)</label>
+  <input id="sec" type="text" maxlength="20" placeholder="e.g. Sec A" autocomplete="off">
+  <div class="hint">Each section gets its own leaderboard. Letters, numbers, spaces and hyphens only (up to 20). Leave empty for one class board.</div>
+
+  <div class="row">
+    <button class="go" id="make">Make my link</button>
+    <button id="check">Check my web app</button>
+  </div>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+
+  <section id="out" aria-label="Your game link">
+    <label>Your game link</label>
+    <div id="link"></div>
+    <div class="row">
+      <button id="copy">Copy link</button>
+      <a class="btn" id="open" target="_blank" rel="noopener">Open the game</a>
+    </div>
+    <div class="qrwrap">
+      <canvas id="qr" width="360" height="400" aria-label="QR code for your game link"></canvas>
+      <div>
+        <p style="margin-top:0">Students scan this with their phone camera.</p>
+        <button id="dl">Download QR code (PNG)</button>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="vendor/qrcode.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var GAME = new URL('./', location.href).href;
+  function parseId(v) {
+    v = String(v || '').trim();
+    var m = v.match(/\/macros\/s\/([\w-]+)\/exec/); if (m) v = m[1];
+    return /^AKfy[\w-]{20,150}$/.test(v) ? v : '';
+  }
+  function cleanSection(v) { return String(v || '').replace(/<[^>]*>/g, '').replace(/[^\w \-]/g, '').replace(/\s+/g, ' ').trim().slice(0, 20); }
+  function say(cls, html) { var m = $('msg'); m.className = 'msg ' + cls; m.innerHTML = html; }
+  function current() {
+    var id = parseId($('url').value), sec = cleanSection($('sec').value);
+    if (!id) { say('err', 'That does not look like an Apps Script web app URL. It should look like <b>https://script.google.com/macros/s/AKfy…/exec</b>.'); return null; }
+    var q = new URLSearchParams(); q.set('i', id); if (sec) q.set('section', sec);
+    return { id: id, sec: sec, link: GAME + '?' + q.toString() };
+  }
+  function drawQr(text, caption) {
+    var qr = qrcode(0, 'M'); qr.addData(text); qr.make();
+    var n = qr.getModuleCount(), quiet = 4, size = 640, cell = Math.floor(size / (n + quiet * 2));
+    var c = $('qr'), w = cell * (n + quiet * 2); c.width = w; c.height = w + 60;
+    var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.fillStyle = '#000';
+    for (var r = 0; r < n; r++) for (var k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect((k + quiet) * cell, (r + quiet) * cell, cell, cell);
+    g.fillStyle = '#1F3A5F'; g.font = 'bold 30px system-ui, sans-serif'; g.textAlign = 'center';
+    g.fillText(caption, c.width / 2, w + 34);
+  }
+  $('make').addEventListener('click', function () {
+    var cur = current(); if (!cur) return;
+    $('link').textContent = cur.link; $('open').href = cur.link;
+    drawQr(cur.link, 'The Accounting Arcade' + (cur.sec ? ' · ' + cur.sec : ''));
+    $('out').style.display = 'block';
+    say('ok', 'Done. Share the link or the QR code with your students. Tip: press <b>Check my web app</b> once to be sure your Sheet answers.');
+  });
+  $('check').addEventListener('click', function () {
+    var id = parseId($('url').value);
+    if (!id) { say('err', 'Paste your web app URL first.'); return; }
+    say('info', 'Checking…');
+    var ctl = new AbortController(); setTimeout(function () { ctl.abort(); }, 15000);
+    fetch('https://script.google.com/macros/s/' + id + '/exec?action=questions', { signal: ctl.signal })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.ok && j.tabs) { var n = Object.keys(j.tabs).length; say(n ? 'ok' : 'info', n ? '✅ Your web app works. It has ' + n + ' question tabs, and scores will be saved to your Sheet.' : '⚠ Your web app works, but there are no question tabs yet. Run <b>setupQuestionTabs</b> in Apps Script, then deploy a new version. Until then the game uses its built-in questions.'); }
+        else if (j && j.ok) say('info', '⚠ Your web app answers, but it is an older version of the script. Paste the latest Code.gs, then Deploy → Manage deployments → edit → New version.');
+        else say('err', 'Your web app answered with an error: ' + String((j && j.error) || 'unknown'));
+      })
+      .catch(function () { say('err', '❌ Could not reach your web app. In Apps Script check: Deploy → Manage deployments → Web app, <b>Execute as: Me</b> and <b>Who has access: Anyone</b>. Then copy the URL again.'); });
+  });
+  $('copy').addEventListener('click', function () {
+    var t = $('link').textContent;
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { say('ok', 'Link copied.'); }, function () { say('info', 'Select the link above and copy it.'); });
+  });
+  $('dl').addEventListener('click', function () {
+    var a = document.createElement('a'); var sec = cleanSection($('sec').value);
+    a.download = 'accounting-arcade-qr' + (sec ? '-' + sec.replace(/\s+/g, '-') : '') + '.png';
+    a.href = $('qr').toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove();
+  });
+})();
+</script>
+</body>
+</html>

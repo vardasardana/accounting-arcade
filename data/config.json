@@ -3,6 +3,8 @@
   "instructor_pin": "2468",
   "LEADERBOARD_URL": "https://script.google.com/macros/s/AKfycbwdaqGVdsxyLoPopv8BNSz0tn4bJfmPAUM2fUlWykIH-1CrFPjLpCZ_obd_WRkojwQpTg/exec",
   "class_code": "ACCT-TRIAL",
+  "QUESTIONS_FROM_SHEET": true,
+  "QUESTIONS_TIMEOUT_S": 5,
   "student_id_enabled": false,
   "default_speed": "standard",
   "speed_locked": false,
@@ -67,7 +69,8 @@
     "1": {
       "read_pause_s": 2.5,
       "gap_s": 1.5,
-      "coin_scale": 1.2
+      "coin_scale": 1.2,
+      "note_cards": "Level 1 cards per run come from level1_waves (cards column); they are drawn at random from all active concept rows."
     },
     "2": {
       "time_per_wave_s": [
@@ -77,7 +80,14 @@
         42,
         40
       ],
-      "coin_scale": 0.8
+      "coin_scale": 0.8,
+      "per_wave": [
+        3,
+        3,
+        2,
+        2,
+        2
+      ]
     },
     "3": {
       "belt_time_s": [
@@ -87,7 +97,14 @@
         10.5,
         10
       ],
-      "coin_scale": 0.5
+      "coin_scale": 0.5,
+      "per_wave": [
+        4,
+        3,
+        3,
+        3,
+        4
+      ]
     },
     "4": {
       "warning_s": [
@@ -96,7 +113,8 @@
         10,
         9.5
       ],
-      "coin_scale": 0.8
+      "coin_scale": 0.8,
+      "side_questions": 3
     },
     "5": {
       "up_time_s": {
@@ -113,12 +131,13 @@
     },
     "6": {
       "ratios": 6,
-      "headlines": 7,
       "pick_time_s": 60,
       "checkout_time_s": 30,
       "shot_time_s": 40,
       "wrong_item_cost": 5,
-      "coin_scale": 0.8
+      "coin_scale": 0.8,
+      "sling_rounds": 2,
+      "headlines_per_round": 4
     }
   },
   "wallet_cap": 450
